@@ -1,0 +1,1436 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8"/>
+  <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+  <title>Panic at the Dojo — Hero Builder</title>
+  <style>
+    * { margin:0; padding:0; box-sizing:border-box; }
+    #root { min-height:100vh; }
+  </style>
+</head>
+<body>
+  <div id="root"></div>
+
+  <script src="https://unpkg.com/react@18/umd/react.development.js"></script>
+  <script src="https://unpkg.com/react-dom@18/umd/react-dom.development.js"></script>
+  <script src="https://unpkg.com/@babel/standalone/babel.min.js"></script>
+  <script type="text/babel">
+    const { useState, useMemo } = React;
+
+
+/* ---------------------------------------------------------------
+   Storage adapter — uses Claude.ai's window.storage when this file
+   is running as a Claude artifact, and falls back to plain
+   localStorage when deployed standalone (e.g. on GitHub Pages).
+--------------------------------------------------------------- */
+const appStorage =
+  typeof window !== "undefined" && window.storage
+    ? window.storage
+    : {
+        async get(key) {
+          const v = localStorage.getItem(key);
+          if (v === null) throw new Error("not found");
+          return { key, value: v };
+        },
+        async set(key, value) {
+          localStorage.setItem(key, value);
+          return { key, value };
+        },
+        async delete(key) {
+          localStorage.removeItem(key);
+          return { key, deleted: true };
+        },
+        async list(prefix = "") {
+          const keys = Object.keys(localStorage).filter((k) => k.startsWith(prefix));
+          return { keys };
+        },
+      };
+
+/* ---------------------------------------------------------------
+   PANIC AT THE DOJO — game data (parsed from the rulebook)
+--------------------------------------------------------------- */
+const GAME_DATA = {"forms": [{"name": "Blaster Form", "alts": "Dragon / Dynamo / Gold / Star", "ability": "Your Actions may apply to one extra target within range. When you add Blaster Form to a Style, increase that Style's maximum range by 1.", "actions": [{"cost": "3+", "name": "Amplify", "effect": "Your next Action this turn has its range increased by 2 and may apply to up to three extra targets within range."}, {"cost": "3+ or 6+", "name": "Shockwave", "effect": "Deal 1 damage to every enemy within range. (6+: Deal 2 damage to one enemy within range.)"}], "skill": "Basically Magic — an ability that's beyond normal, like lycanthrope, telekinesis, fire magic, or a collection of gadgets."}, {"name": "Control Form", "alts": "Blizzard / Gravity / Owl / Watcher", "ability": "When you add Control Form to a Style, choose one: increase that Style's maximum range by 3, or set that Style's minimum range to 1. Control Token: spend 1 to negate an enemy's Action within range, or 2 to redirect it. Once per turn.", "actions": [{"cost": "3+ or 6+ or 9+", "name": "Suppression", "effect": "You gain 1 Control token and may move one space. (6+: gain another Control token. 9+: gain another Control token and may move one space.)"}], "skill": "Professional — you always look stylish, cool, and in control. People listen when you make demands, and you have lackeys who do what you say."}, {"name": "Dance Form", "alts": "Circle / Crab / Hurricane / Shuffle", "ability": "After you Throw or Grapple someone, you gain X Speed tokens, where X is how many spaces you moved them. After each space you move using Free Movement, you may choose someone within range and pull them 1 space.", "actions": [{"cost": "3 Speed Tokens", "name": "Try And Keep Up", "effect": "Move two spaces, then heal 2."}], "skill": "Put On A Show — you can draw as much attention as you want, whenever you want it, away from anything else, for any reason."}, {"name": "Iron Form", "alts": "Fortress / Mountain / Turtle / Void", "ability": "You have Armor (reduce all damage taken by 1, min 0). When you gain Speed tokens, replace half of them (rounded up) with Iron tokens.", "actions": [{"cost": "3+", "name": "Secure", "effect": "Choose two: gain 3 Iron tokens; an ally within range gains 2 Iron tokens; or heal someone within range."}, {"cost": "3+", "name": "Contain", "effect": "Choose two: pull an enemy 2 spaces; Challenge an enemy you can see; or place a Trap into a space within range."}, {"cost": "6+", "name": "Protect", "effect": "Choose four from the Secure and/or Contain lists."}], "skill": "Unmovable — you can smash through any door, wall, or vehicle, and nothing can move you when you plant your feet."}, {"name": "One-Two Form", "alts": "Chaos / Drill / Hound / Sky", "ability": "After you deal damage to an enemy with an Action, you hit them again for 1 damage.", "actions": [{"cost": "1+", "name": "Slide In", "effect": "Teleport two spaces."}, {"cost": "4+", "name": "Whirlwind", "effect": "Deal 1 damage to up to three enemies within range."}], "skill": "Think Fast — you never lose in games of skill, and you can fast talk anyone into seeing things your way."}, {"name": "Power Form", "alts": "Blade / Rage / Sun / Tiger", "ability": "When you gain Speed tokens, replace half of them (rounded up) with Power tokens. You may spend up to 3 Power tokens per hit.", "actions": [{"cost": "3+", "name": "Yell", "effect": "You gain 3 Power tokens."}, {"cost": "6+ or 9+", "name": "Crush", "effect": "Deal 3 damage to an enemy within range, unreduceable and unblockable. (9+: may spend any number of Power tokens on this hit.)"}], "skill": "Unstoppable — you can smash through any door, wall, or vehicle."}, {"name": "Reversal Form", "alts": "Panic / Scorpion / Time / Tornado", "ability": "You have Armor. You do not discard Speed tokens at end of turn. You may only take one Action per turn, but your Action Pool does not empty between turns/rounds.", "actions": [{"cost": "1+", "name": "Counter Attack", "effect": "Teleport within range of an enemy that damaged you this turn, then spend this number on another Action targeting them."}], "skill": "Perfect Timing — you can perfectly catch or stop anything coming directly at you with a single, well-placed motion."}, {"name": "Shadow Form", "alts": "Moon / Silence / Silver / Snake", "ability": "At the start and end of your turn, you gain 2 Speed tokens. You do not discard Speed tokens at the end of a turn.", "actions": [{"cost": "3 Speed Tokens", "name": "Stunt", "effect": "Place one Fog, Copy, or Trap obstacle into an adjacent space, then teleport two spaces."}], "skill": "Shadow Walker — no one will ever notice you sneaking around, even in plain sight."}, {"name": "Song Form", "alts": "Melody / Symphony / Remix / Wave", "ability": "At the start of your turn, choose Iron, Power, or Speed: you gain 3 tokens of that type, each ally gains 1.", "actions": [{"cost": "1+ or 4+ or 6+", "name": "Sing Along", "effect": "Choose one ally you can see. Choose one: they remove a token; they heal; or they gain 2 tokens from your song. (4+: choose another. 6+: add a 4 to their Action Pool, they must spend it immediately.)"}], "skill": "Natural Charisma — people naturally like you. Anyone who is not your enemy is your friend, even if you've just met them."}, {"name": "Vigilance Form", "alts": "Bear / Eternity / Heart / Moment", "ability": "At the start of your turn, heal or discard one token you hold. At the end of your turn, give an enemy in range one Weakness token.", "actions": [{"cost": "1+ or 4+", "name": "Bow Down", "effect": "Give one Weakness token to an enemy within range. (4+: give two instead.)"}, {"cost": "1+ or 4+", "name": "Stand Strong", "effect": "Heal yourself or an ally you can see. (4+: heal yourself AND a different ally.)"}], "skill": "Eyes Wide Open — you cannot be surprised by anything, and always have a chance to react first."}, {"name": "Wild Form", "alts": "Beast / Platinum / Soul / Storm", "ability": "At the start of your turn, add to your Action Dice for each true: your health bar is at half HP or less; a teammate is Taken Out; you hold a non-Basic token.", "actions": [{"cost": "2 Basic Tokens", "name": "Fury", "effect": "Deal 1 damage to an enemy within range, push them 1 space at end of turn. Usable 3x per turn."}], "skill": "Wind Runner — you can leap anywhere you can see, run along walls, run as fast as a car, and, with an explanation, fly."}, {"name": "Zen Form", "alts": "Lotus / Mantis / Spiral / World", "ability": "Your Action Pool is predetermined: 7, 5, 3, 1. You may hold multiple Shields (only one active at a time). When an enemy damages/breaks your Shield, deal 1 damage to them.", "actions": [{"cost": "3+ or 7+", "name": "Focus", "effect": "Gain a 2-point Shield, may move one space. (7+: gain a 4-point Shield instead, may move two spaces.)"}], "skill": "Peaceful Heart — you can calm rampaging beasts, unruly mobs, and anyone acting out of hurt or anger."}], "archetypes": {"Angel": {"description": "A controlling tank focused on Challenge tokens.", "focused": "At the start of your turn, Challenge an enemy you can see, then deal 1 damage to them, then heal 1. After you Challenge an enemy, deal 1 damage to them and heal 1. (Net effect: Challenge, deal 2, heal 2 each turn.)", "fused": "At the start of your turn, Challenge an enemy you can see. After you Challenge an enemy, deal 1 damage to them and heal 1.", "frantic": "At the start of this turn, Challenge an enemy you can see, deal 2 damage to them, and heal."}, "Cavalry": {"description": "A team support leader focused on Shields.", "focused": "At the start and end of your turn, you and each ally adjacent to you gains a 2 point Shield. When your Shield or an ally's Shield breaks, you gain 1 Speed token.", "fused": "At the end of your turn, you and each ally adjacent to you gains a 2 point Shield.", "frantic": "At the start and end of this turn, you and each ally adjacent to you gains a 2 point Shield."}, "Cyborg": {"description": "A versatile combo warrior focused on Basic tokens of all types.", "focused": "At the start of your turn, you gain four Basic Tokens of your choice.", "fused": "At the start of your turn, you gain two Basic Tokens of your choice.", "frantic": "At the start of this turn, you gain four Basic Tokens of your choice."}, "Demon": {"description": "An aggressive monster focused on combo breaking.", "focused": "At the end of your turn, you gain 2 Chaos tokens.", "fused": "At the end of your turn, you gain 1 Chaos token.", "frantic": "At the end of this turn, you gain 2 Chaos tokens. (Chaos token: spend any time to immediately take a 4 Action, interrupting the current turn.)"}, "Flametongue": {"description": "A zoning combo fighter focused on Burning tokens.", "focused": "After you deal damage to an enemy with an Action, give that enemy one Burning token.", "fused": "The first time you deal damage to an enemy during your turn, give that enemy two Burning tokens.", "frantic": "During this turn, after you deal damage to an enemy with three or less Burning tokens, give them one Burning token."}, "Gunkata": {"description": "A defensive zoning fighter focused on keeping their distance.", "focused": "At the start of your turn, push every adjacent enemy one space, then move one space. At the end of your turn, deal 1 damage to each enemy within range.", "fused": "At the end of your turn, deal 1 damage to each enemy within range.", "frantic": "At the end of this turn, you may move one space, then deal 1 damage to each enemy within range. Then, you may move one space."}, "Phantom": {"description": "A defensive, supporting zoner focused on versatility.", "focused": "You have access to all of your Styles' Unique Actions at all times, no matter your current Stance. All of your Unique Actions cost 1 less (minimum 1+ or 2 tokens).", "fused": "Your Unique Actions have their cost reduced by 1 (minimum 1+ or 2 tokens).", "frantic": "You have access to all of your Unique Actions this turn, no matter your current Style and Form. Costs reduced by 1 (minimum 1+ or 2 tokens) this turn."}, "Punk": {"description": "An aggressive tank focused on revenge.", "focused": "At the start of your turn, add X to your Action Pool, where X = twice the damage on your current health bar (X=1 if full).", "fused": "At the start of your turn, add X to your Action Pool, where X = the damage on your current health bar (X=1 if full).", "frantic": "At the start of this turn, add X to your Action Pool, where X = twice the damage on your current health bar (X=1 if full)."}, "Teacher": {"description": "A mentor focused on letting their allies do all the work.", "focused": "At the end of your turn, you gain two Inspired tokens.", "fused": "At the end of your turn, you gain an Inspired token.", "frantic": "At the end of this turn, you gain two Inspired tokens. (Inspired token: spend during an ally's turn to roll and add a number to their Action Pool.)"}, "Trickster": {"description": "A defensive tank focused on never being pinned down.", "focused": "You may spend any tokens you hold as if they were Iron tokens. When you spend Iron tokens to reduce damage taken, push your attacker 1 space, then you may move 1 space.", "fused": "You may spend any Basic Tokens you hold as Iron tokens. When you spend Iron tokens to reduce damage taken, you may move 1 space.", "frantic": "Until your next turn, you may spend any tokens you hold as if they were Iron tokens. When you spend Iron tokens to reduce damage taken, push your attacker 1 space, then you may move 1 space."}, "Underdog": {"description": "A defensive warrior focused on Basic tokens of all types.", "focused": "At the start of your turn, you gain one Basic token of your choice. After you take damage, you gain one Basic token of your choice.", "fused": "Same as Focused, but you cannot choose a Basic token you are already holding.", "frantic": "At the start of this turn, you gain one Basic token of your choice. Until your next turn, after you take damage, you gain one Basic token of your choice."}, "Wardancer": {"description": "A rush-down brawler focused on high numbers.", "focused": "After rolling your Action Dice, either increase all of your numbers by 1, or increase one of your numbers by 4.", "fused": "After rolling your Action Dice, increase two of your numbers by 2.", "frantic": "After rolling your Action Dice this turn, either increase all of your numbers by 1, or increase one of your numbers by 4."}, "Winterblossom": {"description": "A controlling bastion focused on Weakness tokens.", "focused": "At the start of every turn, give 1 Weakness token to one enemy within range.", "fused": "At the start and end of your turn, give 1 Weakness token to one enemy within range.", "frantic": "At the start and end of this turn, give 2 Weakness tokens to one enemy within range."}}, "styles": {"Angel": [{"name": "Halcyon Style", "range": "1-2", "ability": "At the start of your turn, remove one token you hold. After you remove tokens using an Action or Ability, you gain an equal number of Iron tokens."}, {"name": "Judgment Style", "range": "1", "ability": "When an enemy with your Challenge starts their turn, they do not roll their lowest Action Die. It is discarded and unused."}, {"name": "Shining Style", "range": "1", "ability": "At the start of your turn, all obstacles and enemies adjacent to you are pushed one space. Enemies cannot move into the spaces adjacent to you."}, {"name": "Singing Style", "range": "2-4", "ability": "At the start and end of your turn, you gain a 2 point Shield. After each Action you perform, if you have an active Shield, increase its value by 1."}, {"name": "Winged Style", "range": "1-2", "ability": "Edges cannot remove you from play. At the end of every turn, you may move two spaces."}], "Cavalry": [{"name": "Charging Style", "range": "1", "ability": "At the start of your turn, you may move 2 spaces. At the start of each ally's turn, they may move 2 spaces."}, {"name": "Heroic Style", "range": "1-2", "ability": "Whenever an ally within range takes damage, they take half that damage (rounded down) and you take the other half (rounded up)."}, {"name": "Jumping Style", "range": "1", "ability": "At the start and end of your turn, you may teleport one, two, or three spaces."}, {"name": "Rallying Style", "range": "1", "ability": "At the end of your turn, you and each ally within range heals. At the start of each ally's turn, if within range of you, they may heal."}, {"name": "Unbreakable Style", "range": "1-2", "ability": "After each Action you perform, give one Iron token to an ally other than yourself within range. Your allies within range may spend your tokens."}], "Cyborg": [{"name": "Armored Style", "range": "1-2", "ability": "After you spend Iron tokens, you heal 1. (2 Iron Tokens: You, Stay — Challenge an enemy within range; they discard three Speed tokens.)"}, {"name": "Incinerator Style", "range": "1-3", "ability": "When you spend Power tokens to boost damage, give one Burning token to the target. (2 Power Tokens: Flamethrower — an enemy within range takes 1 damage, gains a Burning token, and is pushed 1 space.)"}, {"name": "Machine Style", "range": "1-2", "ability": "You may spend your Basic Tokens as if they were any other Basic Tokens (Iron, Power, Speed)."}, {"name": "Rocket Style", "range": "1", "ability": "After you push someone, you may teleport to any empty space adjacent to them. (2 Speed Tokens: Rocket Tackle — push an adjacent enemy or ally two spaces.)"}, {"name": "Syphon Style", "range": "1-2", "ability": "At the end of your turn, choose a token you hold. Either replace it with a Power token, or gain another copy of it."}], "Demon": [{"name": "Dark Style", "range": "2-4", "ability": "You can see and target enemies through Fog. At the end of your turn, place a Fog obstacle into your space."}, {"name": "Ogre's Style", "range": "1-2", "ability": "Your Throw Actions may target any number of enemies within range. After you Throw an enemy, they take 1 damage."}, {"name": "Slasher Style", "range": "1", "ability": "At the end of every turn, you deal 1 damage to an adjacent enemy."}, {"name": "Vampire Style", "range": "1", "ability": "After you deal damage with a hit, you heal 1. After you give Weakness tokens to an enemy, you gain that many Power tokens."}, {"name": "Zombie Style", "range": "1", "ability": "You have Armor. At the start of your turn, if your HP is 3 or less, you heal."}], "Flametongue": [{"name": "Burning Style", "range": "2-4", "ability": "After you target an enemy with an Action, if they have four Burning tokens or less, give them 1 Burning token."}, {"name": "Explosion Style", "range": "2-4", "ability": "After you deal damage to an enemy, push that enemy one space. After you destroy an obstacle, replace it with an Edge."}, {"name": "Inferno Style", "range": "1-2", "ability": "At the end of your turn, after your Burning tokens have already triggered, you gain three Burning tokens. After an enemy damages you with an Action, you may give them all of your Burning tokens."}, {"name": "Phoenix Style", "range": "1", "ability": "Whenever you would take damage from Burning tokens or from Traps, you heal that much damage instead."}, {"name": "Volcanic Style", "range": "1-3", "ability": "After you spend Speed tokens on Free Movement, you may place a Trap into each space you exit. You do not take damage from entering a space with a Trap."}], "Gunkata": [{"name": "Akimbo Style", "range": "3-5", "ability": "After you deal damage to someone, you move one space."}, {"name": "Artillery Style", "range": "3-8", "ability": "You can see and target enemies through Fog and Walls."}, {"name": "Crosshair Style", "range": "4-8", "ability": "You ignore Armor and Shields when dealing damage. Weakness tokens you hold and Iron tokens your enemies hold do not reduce the damage you deal."}, {"name": "Ricochet Style", "range": "2-4", "ability": "After you deal damage to an enemy with an Action, you may deal 1 damage to a different enemy within 3 spaces of them."}, {"name": "Ten Thousand Style", "range": "2-3", "ability": "Adds a die to your Action Dice. (2+: Point Blank Shot — deal 1 damage to an adjacent enemy, then push them 1 space.)"}], "Phantom": [{"name": "Aura Style", "range": "1-3", "ability": "At the start of your turn, you gain a 3 point Shield. When an enemy within range damages or breaks a Shield, you may move that enemy one space. After a Shield within range breaks, you gain 1 Iron token."}, {"name": "Crying Style", "range": "1-4", "ability": "At the start of your turn, give one Weakness token to all enemies within range. At the end of your turn, Challenge an enemy within range and give them one Weakness token."}, {"name": "Puppet's Style", "range": "1-5", "ability": "You may use Speed tokens to move any ally, enemy, or obstacle within range, using the normal Free Movement rules."}, {"name": "Spirit Style", "range": "1-3", "ability": "Edges cannot remove your Copies from play. You and your Copies can move over Walls as though they were empty space."}, {"name": "Vortex Style", "range": "1-3", "ability": "Edges cannot remove you from play. When you stand on an Edge, every other Edge counts as an adjacent space you can move to."}], "Punk": [{"name": "Bleeding Style", "range": "1", "ability": "You don't get Taken Out at zero HP; you can keep fighting as long as you remain in play. (2 HP: Lash Out — push an adjacent enemy two spaces, spending your own HP.)"}, {"name": "Brawling Style", "range": "1", "ability": "After your Shield breaks, you gain 1 Power token. After you deal damage without spending a Power token on that hit, you gain 1 Power token. (2 Power Tokens: Tough It Out — gain a 2 point Shield.)"}, {"name": "Flashy Style", "range": "1", "ability": "After you roll your Action Dice, you may combine two of your numbers into a single, larger number."}, {"name": "Knockdown Style", "range": "1", "ability": "After you take damage from an enemy, you deal 1 damage back to them."}, {"name": "Taunting Style", "range": "1", "ability": "After you take damage, you gain 1 Iron token. After you take damage from an enemy with your Challenge, you may move one space."}], "Teacher": [{"name": "Patient Style", "range": "1", "ability": "At the end of your turn, your Speed tokens become Iron tokens. You may only take one Action per turn; your Action Pool does not empty between Turns/Rounds."}, {"name": "Elder Style", "range": "1-2", "ability": "This Stance's Unique Actions cost 1 less (minimum 1+ or 2 tokens). Once per turn you may use any Unique Action you know, from any Stance, for free."}, {"name": "Mastermind Style", "range": "No range — targets allies", "ability": "You cannot perform Actions yourself. Instead, spend your numbers on your allies, making them perform Actions for you, using their location/range/bonuses."}, {"name": "Motivating Style", "range": "1-2", "ability": "At the end of your turn, allies within range heal, and you gain an Inspired token."}, {"name": "Training Style", "range": "1", "ability": "At the end of your turn, give an ally one Training token. (Training token: spend before an Action to increase all numbers in that Action by 1, including cost. Max 1/turn.)"}], "Trickster": [{"name": "Caged Style", "range": "1", "ability": "Adjacent enemies cannot gain or spend Speed tokens."}, {"name": "Mysterious Style", "range": "1-2", "ability": "At the start of your turn, place a Fog obstacle into your space. While you stand in Fog, your maximum range is doubled. (3 Speed/Iron Tokens: Ghost Walk — place Fog within range, then teleport to a Fog obstacle within range.)"}, {"name": "Illusion Style", "range": "1-3", "ability": "After an enemy damages you while within range of at least one of your Copies, you deal 1 damage to them (2 if within range of 3+ Copies). You may spend Copies as Iron tokens."}, {"name": "Hidden Style", "range": "1-3", "ability": "You may move through Walls as though empty space, and can see/target through Walls. (3 Iron tokens: Sudden Strike — deal 2 damage to an enemy within range.)"}, {"name": "Whip Style", "range": "2-5", "ability": "Your Throw Actions target one person within range. When you Throw or Grapple an enemy, they take 2 damage."}], "Underdog": [{"name": "Collateral Style", "range": "1-2", "ability": "After you destroy an obstacle, you gain one Basic token of your choice."}, {"name": "Distracting Style", "range": "1-2", "ability": "After an enemy damages you, if they have no Weakness tokens, give them one. (1+ or 2 Basic Tokens: Flare — move one space, then give a Weakness token to an enemy within range.)"}, {"name": "Eye of the Style", "range": "1", "ability": "At the start of your turn, you gain a Bonus of your choice."}, {"name": "Lucky Style", "range": "1", "ability": "You have Armor, and add an extra die to your Action Dice."}, {"name": "Misfortune's Style", "range": "1-3", "ability": "When you would take damage from a Trap, deal that damage to an enemy within range instead (or gain a Power token if none). (1+ or 3 Basic Tokens: Bad Luck — place a Trap within range.)"}], "Wardancer": [{"name": "Forbidden Style", "range": "1-2", "ability": "At the start of your turn, take 2 damage (cannot drop below 1 HP). This Style attaches to TWO Forms at once — you gain the Abilities and Unique Actions of both, combining their Action Dice."}, {"name": "Lightning Style", "range": "1", "ability": "After you deal damage, you gain 1 Speed token."}, {"name": "Overwhelming Style", "range": "1", "ability": "You ignore Armor when dealing damage. When an enemy hits you with an Action, you may spend a Power token to deal 1 damage to them and push them 1 space."}, {"name": "Relentless Style", "range": "1", "ability": "When you deal damage to an enemy, immediately push them one space and then move into the empty space they left."}, {"name": "Weightless Style", "range": "1", "ability": "All spaces are Empty spaces to you. Edges cannot remove you from play. Rubble does not make you discard Speed tokens. Traps deal no damage to you."}], "Winterblossom": [{"name": "Crystal Style", "range": "1-2", "ability": "When one of your Copies is destroyed, it deals 1 damage to every enemy adjacent to it."}, {"name": "Frozen Style", "range": "1", "ability": "After an enemy moves into an empty space adjacent to you, you may give them one Weakness token."}, {"name": "Precision Style", "range": "1-2", "ability": "Your Actions deal +1 damage to enemies with Armor or Shields. When you target an enemy with an Action, they must discard 1 Iron token."}, {"name": "Pressure Style", "range": "1-2", "ability": "At the start of your turn, give one Weakness token to every enemy within range."}, {"name": "Reflected Style", "range": "2-3", "ability": "At the start of your turn, you may place up to three Walls into empty adjacent spaces. You can see and target enemies through Walls."}]}};
+
+const ARCHETYPE_NAMES = Object.keys(GAME_DATA.archetypes);
+const HERO_TYPES = ["Focused", "Fused", "Frantic"];
+const TOKEN_TYPES = [
+  { key: "Iron", color: "#9db4c9" },
+  { key: "Power", color: "#ff5d5d" },
+  { key: "Speed", color: "#39f2ff" },
+  { key: "Weakness", color: "#c479ff" },
+  { key: "Burning", color: "#ff9635" },
+  { key: "Other", color: "#e8f4ff" },
+];
+
+const TOKEN_GLOSSARY = [
+  {
+    name: "Iron Token",
+    color: "#9db4c9",
+    category: "Basic",
+    text:
+      "Damage reduction on demand. When you're targeted by an enemy's Action, spend Iron tokens 1-for-1 to reduce the total damage (and the total distance you're moved) by that many. Iron tokens apply to a hit's cumulative effect.",
+  },
+  {
+    name: "Power Token",
+    color: "#ff5d5d",
+    category: "Basic",
+    text:
+      "Extra punch. Spend one Power token when you deal damage with a hit to increase that damage by 1, or when you push someone to push them 1 space further. If a hit both damages and pushes, one token boosts both. Normally 1 per hit — Power Form raises that to 3.",
+  },
+  {
+    name: "Speed Token",
+    color: "#39f2ff",
+    category: "Basic",
+    text:
+      "Free Movement. While holding any, move 1 space at any time between (or during) Actions. Discard 1 for a lateral move, 2 for diagonal, +1 more to enter Rubble. Any unspent Speed tokens are discarded at the end of every turn.",
+  },
+  {
+    name: "Weakness Token",
+    color: "#c479ff",
+    category: "Common",
+    text:
+      "Strength drained or held back. Whenever you deal damage while holding any, reduce that damage by 2 (minimum 0), then discard 1 Weakness token. Given out mostly by Winterblossom and Vigilance Form to shut down attackers.",
+  },
+  {
+    name: "Burning Token",
+    color: "#ff9635",
+    category: "Common",
+    text:
+      "You're on fire. At the end of your turn, take damage equal to the number of Burning tokens you hold, then discard 1. Primarily dealt out by Flametongue.",
+  },
+  {
+    name: "Challenge Token",
+    color: "#ffd166",
+    category: "Common",
+    text:
+      "A named grudge — you can only hold 1 at a time. While you hold someone's Challenge, all of your targeted Actions must include them. When you damage the person whose Challenge you hold, discard it at the end of your turn. Central to Angel and Punk.",
+  },
+  {
+    name: "Control Token",
+    color: "#8fd6ff",
+    category: "Archetype-specific",
+    text:
+      "Control Form only. Spend 1 to negate an enemy Action within range (they lose the number spent, nothing happens), or spend 2 to redirect it — you choose all its targets and decisions instead. Once per turn.",
+  },
+  {
+    name: "Chaos Token",
+    color: "#ff6b6b",
+    category: "Archetype-specific",
+    text:
+      "Demon only. Spend one at any time to immediately take a 4-cost Action, interrupting whatever turn is currently happening until that Action resolves.",
+  },
+  {
+    name: "Inspired Token",
+    color: "#7dffa0",
+    category: "Archetype-specific",
+    text:
+      "Teacher only. During an ally's turn, spend one to roll a die and add that number straight to their Action Pool.",
+  },
+  {
+    name: "Training Token",
+    color: "#ffb020",
+    category: "Archetype-specific",
+    text:
+      "Granted by Teacher's Training Style. Before an ally performs an Action, they may spend one to increase every number listed in that Action by 1 — including its cost. Max 1 spent per turn.",
+  },
+];
+
+const emptyChar = () => ({
+  name: "",
+  player: "",
+  heroType: "Focused",
+  archetype1: "Angel",
+  archetype2: "Cavalry",
+  archetype3: "Cyborg",
+  forms: ["Blaster Form", "Iron Form", "Power Form"],
+  stances: [
+    { archetype: "Angel", style: "" },
+    { archetype: "Angel", style: "" },
+    { archetype: "Angel", style: "" },
+  ],
+  skills: [0, 1, 2].map(() => ""),
+  hp: 12,
+  maxHp: 12,
+  tokens: TOKEN_TYPES.reduce((a, t) => ({ ...a, [t.key]: 0 }), {}),
+  notes: "",
+});
+
+/* ---------- palette ---------- */
+/* Palette pulled from the Vara Spiral polities:
+   Federation teal  — idealistic, post-scarcity, the "default" register
+   Imperial violet  — psionic, old, ceremonial
+   Republic gold    — corporate, licensed, transactional
+   Void red         — Swarm Virus corruption / critical states
+   Free Space grey  — unregistered, Omega Quadrant frontier text */
+const bg0 = "#05080f";
+const bg1 = "#0b111c";
+const bg2 = "#0f1826";
+const cyan = "#3ff0ff"; // Federation
+const magenta = "#c86bff"; // Imperial
+const amber = "#ffb020"; // Republic
+const danger = "#ff4d5e"; // Void / Swarm corruption
+const dim = "#5f7688"; // Free Space grey
+const textMain = "#dbeeff";
+
+const headFont = "'Orbitron', 'Rajdhani', sans-serif";
+const monoFont = "'Share Tech Mono', 'JetBrains Mono', monospace";
+
+function Panel({ title, children, glow, right, tag }) {
+  return (
+    <div
+      style={{
+        position: "relative",
+        marginBottom: 22,
+        background: `linear-gradient(180deg, ${bg2}, ${bg1})`,
+        border: `1px solid ${glow || cyan}33`,
+        borderRadius: 4,
+        padding: "16px 16px 14px",
+        boxShadow: `0 0 0 1px #ffffff08 inset, 0 0 24px -14px ${glow || cyan}`,
+      }}
+    >
+      <Corner glow={glow || cyan} pos="tl" />
+      <Corner glow={glow || cyan} pos="br" />
+      <div
+        style={{
+          display: "flex",
+          alignItems: "flex-start",
+          justifyContent: "space-between",
+          marginBottom: 14,
+        }}
+      >
+        <div>
+          <div
+            style={{
+              fontFamily: headFont,
+              fontSize: 13,
+              letterSpacing: 3,
+              textTransform: "uppercase",
+              color: glow || cyan,
+              display: "flex",
+              alignItems: "center",
+              gap: 8,
+            }}
+          >
+            <span style={{ opacity: 0.6 }}>//</span>
+            {title}
+          </div>
+          {tag && (
+            <div
+              style={{
+                fontFamily: monoFont,
+                fontSize: 9.5,
+                letterSpacing: 1.5,
+                color: dim,
+                marginTop: 2,
+                marginLeft: 16,
+              }}
+            >
+              {tag}
+            </div>
+          )}
+        </div>
+        {right}
+      </div>
+      {children}
+    </div>
+  );
+}
+
+function Corner({ glow, pos }) {
+  const styles = {
+    tl: { top: -1, left: -1, borderTop: `2px solid ${glow}`, borderLeft: `2px solid ${glow}` },
+    br: { bottom: -1, right: -1, borderBottom: `2px solid ${glow}`, borderRight: `2px solid ${glow}` },
+  };
+  return (
+    <div
+      style={{
+        position: "absolute",
+        width: 14,
+        height: 14,
+        ...styles[pos],
+      }}
+    />
+  );
+}
+
+function Field({ label, children }) {
+  return (
+    <div style={{ marginBottom: 12 }}>
+      <div
+        style={{
+          fontFamily: monoFont,
+          fontSize: 10.5,
+          fontWeight: 700,
+          letterSpacing: 1.5,
+          textTransform: "uppercase",
+          color: dim,
+          marginBottom: 5,
+        }}
+      >
+        {label}
+      </div>
+      {children}
+    </div>
+  );
+}
+
+const selectStyle = {
+  width: "100%",
+  padding: "9px 10px",
+  fontSize: 13.5,
+  fontFamily: monoFont,
+  border: `1px solid #2c3f52`,
+  borderRadius: 3,
+  background: "#0a121d",
+  color: textMain,
+  outline: "none",
+};
+
+const inputStyle = { ...selectStyle };
+
+const textAreaStyle = {
+  ...selectStyle,
+  minHeight: 80,
+  resize: "vertical",
+  lineHeight: 1.5,
+};
+
+function TypeToggle({ options, value, onChange }) {
+  return (
+    <div style={{ display: "flex", gap: 6 }}>
+      {options.map((t) => (
+        <button
+          key={t}
+          onClick={() => onChange(t)}
+          className="tab-btn"
+          style={{
+            flex: 1,
+            padding: "8px 4px",
+            fontFamily: headFont,
+            fontSize: 12,
+            letterSpacing: 1,
+            border: `1px solid ${value === t ? cyan : "#2c3f52"}`,
+            borderRadius: 3,
+            background: value === t ? `${cyan}1a` : "transparent",
+            color: value === t ? cyan : dim,
+            cursor: "pointer",
+            textTransform: "uppercase",
+          }}
+        >
+          {t}
+        </button>
+      ))}
+    </div>
+  );
+}
+
+/* ---------- collapsible stance readout used in Combat tab ---------- */
+function StanceCard({ i, form, style, archetype, archetypeAbilityText, heroType, expanded, onToggle }) {
+  const stanceLabel = style
+    ? `${style.name.replace(" Style", "")} ${form.name.replace(" Form", "")}`
+    : form.name;
+
+  return (
+    <div
+      style={{
+        border: `1px solid ${expanded ? cyan : "#243748"}`,
+        borderRadius: 4,
+        marginBottom: 10,
+        background: "#0a121d",
+        overflow: "hidden",
+        transition: "border-color .15s",
+      }}
+    >
+      <button
+        onClick={onToggle}
+        style={{
+          width: "100%",
+          display: "flex",
+          alignItems: "center",
+          justifyContent: "space-between",
+          padding: "10px 12px",
+          background: expanded ? `${cyan}14` : "transparent",
+          border: "none",
+          cursor: "pointer",
+          textAlign: "left",
+        }}
+      >
+        <div>
+          <div style={{ fontFamily: headFont, fontSize: 13, letterSpacing: 1, color: cyan }}>
+            STANCE {i + 1} — {stanceLabel.toUpperCase()}
+          </div>
+          <div style={{ fontFamily: monoFont, fontSize: 11, color: dim, marginTop: 2 }}>
+            {style ? `RANGE ${style.range}` : "no style selected"} · {archetype}
+          </div>
+        </div>
+        <div
+          style={{
+            color: cyan,
+            fontFamily: monoFont,
+            fontSize: 16,
+            transform: expanded ? "rotate(180deg)" : "none",
+            transition: "transform .15s",
+          }}
+        >
+          ▾
+        </div>
+      </button>
+
+      {expanded && (
+        <div style={{ padding: "0 12px 14px", fontFamily: monoFont, fontSize: 12.5, lineHeight: 1.6, color: "#c3dced" }}>
+          <div style={{ borderTop: "1px solid #1c2c3b", paddingTop: 10, marginTop: 2 }}>
+            <div style={{ color: amber, fontWeight: 700, marginBottom: 3 }}>
+              FORM · {form.name.toUpperCase()}{" "}
+              <span style={{ color: dim, fontWeight: 400 }}>({form.alts})</span>
+            </div>
+            <div style={{ marginBottom: 6 }}>{form.ability}</div>
+            {form.actions.map((a) => (
+              <div key={a.name} style={{ marginBottom: 3 }}>
+                <span style={{ color: cyan }}>
+                  {a.cost}: {a.name}
+                </span>{" "}
+                — {a.effect}
+              </div>
+            ))}
+            <div style={{ marginTop: 4, color: dim, fontStyle: "italic" }}>SKILL · {form.skill}</div>
+          </div>
+
+          {style && (
+            <div style={{ borderTop: "1px solid #1c2c3b", paddingTop: 10, marginTop: 10 }}>
+              <div style={{ color: magenta, fontWeight: 700, marginBottom: 3 }}>
+                STYLE · {style.name.toUpperCase()} <span style={{ color: dim, fontWeight: 400 }}>(range {style.range})</span>
+              </div>
+              <div>{style.ability}</div>
+            </div>
+          )}
+
+          {archetypeAbilityText && (
+            <div style={{ borderTop: "1px solid #1c2c3b", paddingTop: 10, marginTop: 10 }}>
+              <div style={{ color: "#7dffa0", fontWeight: 700, marginBottom: 3 }}>
+                {heroType.toUpperCase()} {archetype.toUpperCase()} ABILITY <span style={{ color: dim, fontWeight: 400 }}>(always active)</span>
+              </div>
+              <div>{archetypeAbilityText}</div>
+            </div>
+          )}
+        </div>
+      )}
+    </div>
+  );
+}
+
+function App() {
+  const [char, setChar] = useState(emptyChar());
+  const [tab, setTab] = useState("build");
+  const [expanded, setExpanded] = useState({ 0: true, 1: false, 2: false });
+  const [savedRoster, setSavedRoster] = useState([]);
+  const [selectedSave, setSelectedSave] = useState("");
+  const [linkStatus, setLinkStatus] = useState("");
+  const [linkBusy, setLinkBusy] = useState(false);
+
+  function slugify(str) {
+    return (
+      (str || "").trim().toLowerCase().replace(/[^a-z0-9]+/g, "-").replace(/(^-|-$)/g, "") ||
+      "unnamed-hero"
+    );
+  }
+
+  async function refreshRoster() {
+    try {
+      const res = await appStorage.list("hero:");
+      setSavedRoster((res && res.keys) || []);
+    } catch (e) {
+      setSavedRoster([]);
+    }
+  }
+
+  React.useEffect(() => {
+    refreshRoster();
+  }, []);
+
+  async function saveHero() {
+    setLinkBusy(true);
+    setLinkStatus("");
+    try {
+      const key = `hero:${slugify(char.name)}`;
+      const result = await appStorage.set(key, JSON.stringify(char));
+      if (result) {
+        setLinkStatus(`SAVED — "${char.name || "Unnamed Hero"}"`);
+        await refreshRoster();
+        setSelectedSave(key);
+      } else {
+        setLinkStatus("SAVE FAILED — LINK ERROR");
+      }
+    } catch (e) {
+      setLinkStatus("SAVE FAILED — LINK ERROR");
+    }
+    setLinkBusy(false);
+  }
+
+  async function loadHero(key) {
+    if (!key) return;
+    setLinkBusy(true);
+    setLinkStatus("");
+    try {
+      const result = await appStorage.get(key);
+      if (result && result.value) {
+        const loaded = JSON.parse(result.value);
+        setChar({ ...emptyChar(), ...loaded });
+        setLinkStatus(`LOADED — "${loaded.name || "Unnamed Hero"}"`);
+      } else {
+        setLinkStatus("NOT FOUND ON RECORD");
+      }
+    } catch (e) {
+      setLinkStatus("LOAD FAILED — LINK ERROR");
+    }
+    setLinkBusy(false);
+  }
+
+  async function deleteHero(key) {
+    if (!key) return;
+    setLinkBusy(true);
+    try {
+      await appStorage.delete(key);
+      setLinkStatus("RECORD PURGED");
+      setSelectedSave("");
+      await refreshRoster();
+    } catch (e) {
+      setLinkStatus("DELETE FAILED — LINK ERROR");
+    }
+    setLinkBusy(false);
+  }
+
+  function newHero() {
+    setChar(emptyChar());
+    setSelectedSave("");
+    setLinkStatus("NEW RECORD STARTED");
+  }
+
+  const archetypesAvailable = useMemo(() => {
+    if (char.heroType === "Focused") return [char.archetype1];
+    if (char.heroType === "Fused") return [char.archetype1, char.archetype2];
+    return [char.archetype1, char.archetype2, char.archetype3];
+  }, [char.heroType, char.archetype1, char.archetype2, char.archetype3]);
+
+  function update(patch) {
+    setChar((c) => ({ ...c, ...patch }));
+  }
+
+  function updateStance(i, patch) {
+    setChar((c) => {
+      const stances = c.stances.map((s, idx) => (idx === i ? { ...s, ...patch } : s));
+      return { ...c, stances };
+    });
+  }
+
+  function updateForm(i, formName) {
+    setChar((c) => {
+      const forms = c.forms.map((f, idx) => (idx === i ? formName : f));
+      return { ...c, forms };
+    });
+  }
+
+  function updateSkill(i, val) {
+    setChar((c) => {
+      const skills = c.skills.map((s, idx) => (idx === i ? val : s));
+      return { ...c, skills };
+    });
+  }
+
+  function bumpToken(type, delta) {
+    setChar((c) => ({
+      ...c,
+      tokens: { ...c.tokens, [type]: Math.max(0, (c.tokens[type] || 0) + delta) },
+    }));
+  }
+
+  function bumpHp(delta) {
+    setChar((c) => ({ ...c, hp: Math.max(0, Math.min(c.maxHp, c.hp + delta)) }));
+  }
+
+  function labelFromKey(key) {
+    return key
+      .replace(/^hero:/, "")
+      .split("-")
+      .map((w) => (w ? w[0].toUpperCase() + w.slice(1) : w))
+      .join(" ");
+  }
+
+  function buildExportText() {
+    const lines = [];
+    lines.push("=".repeat(48));
+    lines.push(`PANIC AT THE DOJO — HERO RECORD`);
+    lines.push(`VARA SPIRAL NETWORK · OMEGA QUADRANT RELAY`);
+    lines.push("=".repeat(48));
+    lines.push("");
+    lines.push(`NAME:      ${char.name || "Unnamed Hero"}`);
+    lines.push(`PLAYER:    ${char.player || "—"}`);
+    lines.push(`HERO TYPE: ${char.heroType}`);
+    lines.push(`ARCHETYPES: ${archetypesAvailable.join(", ")}`);
+    lines.push(`HP:        ${char.hp} / ${char.maxHp}`);
+    lines.push("");
+    archetypesAvailable.forEach((a) => {
+      lines.push(`[${char.heroType.toUpperCase()} ${a.toUpperCase()}]`);
+      lines.push(GAME_DATA.archetypes[a][char.heroType.toLowerCase()]);
+      lines.push("");
+    });
+    lines.push("-".repeat(48));
+    lines.push("STANCES");
+    lines.push("-".repeat(48));
+    char.stances.forEach((s, i) => {
+      const form = formObjs[i];
+      if (!form) return;
+      const stanceArchetype = char.heroType === "Focused" ? char.archetype1 : s.archetype;
+      const styleObj = (GAME_DATA.styles[stanceArchetype] || []).find((x) => x.name === s.style);
+      const label = styleObj ? `${styleObj.name.replace(" Style", "")} ${form.name.replace(" Form", "")}` : form.name;
+      lines.push("");
+      lines.push(`STANCE ${i + 1}: ${label}`);
+      lines.push(`  Form: ${form.name} (${form.alts})`);
+      lines.push(`    ${form.ability}`);
+      form.actions.forEach((a) => lines.push(`    ${a.cost}: ${a.name} — ${a.effect}`));
+      lines.push(`    Skill: ${form.skill}`);
+      if (styleObj) {
+        lines.push(`  Style: ${styleObj.name} (Range ${styleObj.range})`);
+        lines.push(`    ${styleObj.ability}`);
+      } else {
+        lines.push(`  Style: — not selected —`);
+      }
+    });
+    lines.push("");
+    lines.push("-".repeat(48));
+    lines.push("SKILLS");
+    lines.push("-".repeat(48));
+    char.skills.forEach((sk, i) => {
+      lines.push(`  ${i + 1}. ${sk || formObjs[i]?.skill || "—"}`);
+    });
+    lines.push("");
+    lines.push("-".repeat(48));
+    lines.push("TOKENS ON HAND");
+    lines.push("-".repeat(48));
+    TOKEN_TYPES.forEach((t) => lines.push(`  ${t.key}: ${char.tokens[t.key] || 0}`));
+    if (char.notes) {
+      lines.push("");
+      lines.push("-".repeat(48));
+      lines.push("FIELD NOTES");
+      lines.push("-".repeat(48));
+      lines.push(char.notes);
+    }
+    lines.push("");
+    lines.push("=".repeat(48));
+    lines.push("END TRANSMISSION");
+    lines.push("=".repeat(48));
+    return lines.join("\n");
+  }
+
+  function downloadExport() {
+    const text = buildExportText();
+    const blob = new Blob([text], { type: "text/plain" });
+    const url = URL.createObjectURL(blob);
+    const a = document.createElement("a");
+    a.href = url;
+    a.download = `${slugify(char.name)}-hero-sheet.txt`;
+    document.body.appendChild(a);
+    a.click();
+    document.body.removeChild(a);
+    URL.revokeObjectURL(url);
+  }
+
+  const formObjs = char.forms.map((fn) => GAME_DATA.forms.find((f) => f.name === fn));
+  const hpPct = char.maxHp > 0 ? char.hp / char.maxHp : 0;
+  const hpColor = hpPct <= 0.25 ? danger : hpPct <= 0.5 ? amber : cyan;
+
+  return (
+    <div
+      style={{
+        minHeight: "100vh",
+        background: `
+          radial-gradient(ellipse at 20% -10%, #10233a 0%, transparent 55%),
+          radial-gradient(ellipse at 100% 0%, #2a0f3a 0%, transparent 45%),
+          ${bg0}`,
+        fontFamily: monoFont,
+        color: textMain,
+        padding: "0 0 60px",
+      }}
+    >
+      <style>{`
+        @import url('https://fonts.googleapis.com/css2?family=Orbitron:wght@500;700;900&family=Share+Tech+Mono&family=Rajdhani:wght@600;700&display=swap');
+        * { box-sizing: border-box; }
+        ::selection { background: ${cyan}; color: #001018; }
+        .tab-btn { transition: all .15s; cursor: pointer; }
+        .tab-btn:hover { filter: brightness(1.3); }
+        input:focus, select:focus, textarea:focus { border-color: ${cyan} !important; box-shadow: 0 0 0 1px ${cyan}55; }
+        .tok-btn { transition: transform .1s; cursor: pointer; }
+        .tok-btn:active { transform: scale(0.88); }
+        body { background: ${bg0}; }
+        @keyframes scan {
+          0% { background-position: 0 0; }
+          100% { background-position: 0 40px; }
+        }
+        @media print {
+          body * { visibility: hidden; }
+          #export-sheet, #export-sheet * { visibility: visible; }
+          #export-sheet { position: absolute; top: 0; left: 0; width: 100%; }
+        }
+      `}</style>
+
+      {/* Header */}
+      <div
+        style={{
+          position: "relative",
+          background: `linear-gradient(180deg, #0c1524, #060a12)`,
+          borderBottom: `1px solid ${cyan}44`,
+          padding: "26px 20px 20px",
+          textAlign: "center",
+          overflow: "hidden",
+        }}
+      >
+        <div
+          style={{
+            position: "absolute",
+            inset: 0,
+            backgroundImage: `repeating-linear-gradient(180deg, ${cyan}08 0px, transparent 2px, transparent 4px)`,
+            animation: "scan 6s linear infinite",
+            pointerEvents: "none",
+          }}
+        />
+        <div
+          style={{
+            fontFamily: headFont,
+            fontWeight: 900,
+            fontSize: 34,
+            letterSpacing: 5,
+            color: textMain,
+            lineHeight: 1.1,
+            textShadow: `0 0 18px ${cyan}88`,
+          }}
+        >
+          PANIC <span style={{ color: cyan }}>//</span> DOJO
+        </div>
+        <div
+          style={{
+            fontFamily: monoFont,
+            fontSize: 11,
+            letterSpacing: 3,
+            color: dim,
+            marginTop: 6,
+            textTransform: "uppercase",
+          }}
+        >
+          [ hero build interface · combat readout · stance archive ]
+        </div>
+        <div
+          style={{
+            fontFamily: monoFont,
+            fontSize: 9.5,
+            letterSpacing: 2,
+            color: "#3a4c5c",
+            marginTop: 10,
+          }}
+        >
+          RELAYED FROM THE OMEGA QUADRANT · FREE SPACE UPLINK · VARA SPIRAL NETWORK
+        </div>
+      </div>
+
+      {/* Tabs */}
+      <div
+        style={{
+          display: "flex",
+          flexWrap: "wrap",
+          justifyContent: "center",
+          gap: 8,
+          margin: "18px auto 0",
+          maxWidth: 640,
+          padding: "0 16px",
+        }}
+      >
+        {[
+          ["build", "Build Hero"],
+          ["combat", "Combat Tracker"],
+          ["reference", "Stance Reference"],
+          ["export", "Export Sheet"],
+        ].map(([key, label]) => (
+          <button
+            key={key}
+            className="tab-btn"
+            onClick={() => setTab(key)}
+            style={{
+              flex: "1 1 auto",
+              minWidth: 120,
+              padding: "10px 8px",
+              fontFamily: headFont,
+              fontSize: 13,
+              letterSpacing: 1,
+              border: `1px solid ${tab === key ? cyan : "#233448"}`,
+              borderRadius: 3,
+              background: tab === key ? `${cyan}1f` : "#0a121d",
+              color: tab === key ? cyan : dim,
+              textTransform: "uppercase",
+              boxShadow: tab === key ? `0 0 14px -4px ${cyan}` : "none",
+            }}
+          >
+            {label}
+          </button>
+        ))}
+      </div>
+
+      <div style={{ maxWidth: 640, margin: "22px auto 0", padding: "0 16px" }}>
+        {tab === "build" && (
+          <>
+            <Panel title="Data Link" tag="PERSONAL STORAGE — LOCAL TO THIS DEVICE" glow="#7dffa0">
+              <div style={{ display: "grid", gridTemplateColumns: "1fr auto", gap: 8, marginBottom: 10 }}>
+                <button
+                  disabled={linkBusy}
+                  onClick={saveHero}
+                  style={{
+                    ...linkBtnStyle("#7dffa0"),
+                    opacity: linkBusy ? 0.5 : 1,
+                  }}
+                >
+                  ⬇ SAVE HERO
+                </button>
+                <button disabled={linkBusy} onClick={newHero} style={linkBtnStyle(dim)}>
+                  + NEW
+                </button>
+              </div>
+              <Field label="Load / delete a saved record">
+                <div style={{ display: "grid", gridTemplateColumns: "1fr auto auto", gap: 6 }}>
+                  <select
+                    style={selectStyle}
+                    value={selectedSave}
+                    onChange={(e) => setSelectedSave(e.target.value)}
+                  >
+                    <option value="">— select saved hero —</option>
+                    {savedRoster.map((key) => (
+                      <option key={key} value={key}>
+                        {labelFromKey(key)}
+                      </option>
+                    ))}
+                  </select>
+                  <button
+                    disabled={linkBusy || !selectedSave}
+                    onClick={() => loadHero(selectedSave)}
+                    style={linkBtnStyle(cyan)}
+                  >
+                    LOAD
+                  </button>
+                  <button
+                    disabled={linkBusy || !selectedSave}
+                    onClick={() => deleteHero(selectedSave)}
+                    style={linkBtnStyle(danger)}
+                  >
+                    DEL
+                  </button>
+                </div>
+              </Field>
+              {linkStatus && (
+                <div style={{ fontFamily: monoFont, fontSize: 11, color: dim, letterSpacing: 1 }}>
+                  &gt; {linkStatus}
+                </div>
+              )}
+            </Panel>
+
+            <Panel title="Hero Identity" tag="FEDERATION CIVIL REGISTRY — LAMBDA QUADRANT">
+              <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr", gap: 12 }}>
+                <Field label="Hero Name">
+                  <input
+                    style={inputStyle}
+                    value={char.name}
+                    onChange={(e) => update({ name: e.target.value })}
+                    placeholder="e.g. Crimson Fang"
+                  />
+                </Field>
+                <Field label="Player">
+                  <input
+                    style={inputStyle}
+                    value={char.player}
+                    onChange={(e) => update({ player: e.target.value })}
+                    placeholder="Your name"
+                  />
+                </Field>
+              </div>
+              <Field label="Hero Type">
+                <TypeToggle options={HERO_TYPES} value={char.heroType} onChange={(t) => update({ heroType: t })} />
+                <div style={{ fontSize: 11.5, color: dim, marginTop: 8, lineHeight: 1.5 }}>
+                  {char.heroType === "Focused" &&
+                    "One Archetype, all 3 Styles from it. Strong, reliable Ability."}
+                  {char.heroType === "Fused" &&
+                    "Two Archetypes — 2 Styles from one, 1 from the other. Two half-strength Abilities."}
+                  {char.heroType === "Frantic" &&
+                    "Three Archetypes, ultimate flexibility — but you can't repeat last turn's Form, Style, or Ability."}
+                </div>
+              </Field>
+            </Panel>
+
+            <Panel title="Archetypes" glow={magenta} tag="IMPERIAL PSIONIC DISCIPLINE INDEX — EPSILON QUADRANT">
+              <div
+                style={{
+                  display: "grid",
+                  gridTemplateColumns:
+                    char.heroType === "Focused" ? "1fr" : char.heroType === "Fused" ? "1fr 1fr" : "1fr 1fr 1fr",
+                  gap: 10,
+                }}
+              >
+                {["archetype1", "archetype2", "archetype3"]
+                  .slice(0, char.heroType === "Focused" ? 1 : char.heroType === "Fused" ? 2 : 3)
+                  .map((key, i) => (
+                    <Field key={key} label={`Archetype ${i + 1}`}>
+                      <select style={selectStyle} value={char[key]} onChange={(e) => update({ [key]: e.target.value })}>
+                        {ARCHETYPE_NAMES.map((n) => (
+                          <option key={n} value={n}>
+                            {n}
+                          </option>
+                        ))}
+                      </select>
+                    </Field>
+                  ))}
+              </div>
+              {archetypesAvailable.map((a) => (
+                <div
+                  key={a}
+                  style={{
+                    background: "#0a121d",
+                    border: `1px solid #2c3f52`,
+                    borderRadius: 4,
+                    padding: "10px 12px",
+                    marginTop: 8,
+                    fontSize: 12.5,
+                    lineHeight: 1.6,
+                  }}
+                >
+                  <div style={{ fontFamily: headFont, fontWeight: 700, color: magenta, marginBottom: 3, letterSpacing: 0.5 }}>
+                    {char.heroType.toUpperCase()} {a.toUpperCase()}
+                  </div>
+                  <div style={{ color: "#c3dced" }}>{GAME_DATA.archetypes[a][char.heroType.toLowerCase()]}</div>
+                </div>
+              ))}
+            </Panel>
+
+            <Panel
+              title="Forms & Stances"
+              glow={amber}
+              tag="REPUBLIC COMBAT LICENSING BUREAU — RHO QUADRANT"
+              right={<span style={{ fontFamily: monoFont, fontSize: 10, color: dim }}>SELECT 3</span>}
+            >
+              {[0, 1, 2].map((i) => {
+                const form = formObjs[i];
+                const stance = char.stances[i];
+                const stanceArchetype = char.heroType === "Focused" ? char.archetype1 : stance.archetype;
+                const stylesForArchetype = GAME_DATA.styles[stanceArchetype] || [];
+                return (
+                  <div
+                    key={i}
+                    style={{
+                      border: `1px solid #223546`,
+                      borderRadius: 4,
+                      padding: 12,
+                      marginBottom: 12,
+                      background: "#0a121d",
+                    }}
+                  >
+                    <div style={{ fontFamily: headFont, fontSize: 13, letterSpacing: 1.5, marginBottom: 10, color: amber }}>
+                      STANCE {i + 1}
+                    </div>
+                    <div
+                      style={{
+                        display: "grid",
+                        gridTemplateColumns: char.heroType === "Focused" ? "1fr 1fr" : "1fr 1fr 1fr",
+                        gap: 8,
+                        marginBottom: 8,
+                      }}
+                    >
+                      <Field label="Form">
+                        <select style={selectStyle} value={char.forms[i]} onChange={(e) => updateForm(i, e.target.value)}>
+                          {GAME_DATA.forms.map((f) => (
+                            <option key={f.name} value={f.name}>
+                              {f.name}
+                            </option>
+                          ))}
+                        </select>
+                      </Field>
+                      {char.heroType !== "Focused" && (
+                        <Field label="From Archetype">
+                          <select
+                            style={selectStyle}
+                            value={stance.archetype}
+                            onChange={(e) => updateStance(i, { archetype: e.target.value, style: "" })}
+                          >
+                            {archetypesAvailable.map((a) => (
+                              <option key={a} value={a}>
+                                {a}
+                              </option>
+                            ))}
+                          </select>
+                        </Field>
+                      )}
+                      <Field label="Style">
+                        <select style={selectStyle} value={stance.style} onChange={(e) => updateStance(i, { style: e.target.value })}>
+                          <option value="">— choose —</option>
+                          {stylesForArchetype.map((s) => (
+                            <option key={s.name} value={s.name}>
+                              {s.name}
+                            </option>
+                          ))}
+                        </select>
+                      </Field>
+                    </div>
+
+                    {form && (
+                      <div style={{ fontSize: 12, lineHeight: 1.55, marginBottom: 6 }}>
+                        <b style={{ color: cyan }}>{form.name}</b>{" "}
+                        <span style={{ color: dim }}>({form.alts})</span>
+                        <div style={{ margin: "3px 0" }}>{form.ability}</div>
+                        {form.actions.map((a) => (
+                          <div key={a.name} style={{ margin: "2px 0" }}>
+                            <b>{a.cost}: {a.name}</b> — {a.effect}
+                          </div>
+                        ))}
+                      </div>
+                    )}
+                    {stance.style && (
+                      <div style={{ fontSize: 12, lineHeight: 1.55, borderTop: "1px dashed #223546", paddingTop: 6 }}>
+                        {(() => {
+                          const s = stylesForArchetype.find((x) => x.name === stance.style);
+                          if (!s) return null;
+                          return (
+                            <>
+                              <b style={{ color: magenta }}>
+                                {s.name} <span style={{ fontWeight: 400 }}>(Range: {s.range})</span>
+                              </b>
+                              <div style={{ margin: "3px 0" }}>{s.ability}</div>
+                            </>
+                          );
+                        })()}
+                      </div>
+                    )}
+                    {stance.style && form && (
+                      <div
+                        style={{
+                          marginTop: 8,
+                          fontFamily: headFont,
+                          fontSize: 12,
+                          letterSpacing: 1,
+                          textAlign: "center",
+                          color: bg0,
+                          background: cyan,
+                          borderRadius: 3,
+                          padding: "6px",
+                        }}
+                      >
+                        {stance.style.replace(" Style", "").toUpperCase()} {form.name.replace(" Form", "").toUpperCase()}
+                      </div>
+                    )}
+                  </div>
+                );
+              })}
+            </Panel>
+
+            <Panel title="Skills" glow="#7dffa0" tag="UNREGISTERED — OMEGA QUADRANT FREE SPACE">
+              {[0, 1, 2].map((i) => (
+                <Field key={i} label={`Skill ${i + 1} (default: ${formObjs[i]?.skill.split(" — ")[0] || "—"})`}>
+                  <input
+                    style={inputStyle}
+                    value={char.skills[i]}
+                    placeholder={formObjs[i]?.skill || ""}
+                    onChange={(e) => updateSkill(i, e.target.value)}
+                  />
+                </Field>
+              ))}
+              <div style={{ fontSize: 11, color: dim, lineHeight: 1.5 }}>
+                Leave a box blank to keep the Form's default Skill (shown as placeholder text). Type a
+                replacement to trade it — you may trade one Skill for any Skill of your choice during Hero
+                creation.
+              </div>
+            </Panel>
+          </>
+        )}
+
+        {tab === "combat" && (
+          <>
+            <Panel title="Hero Readout" tag="LIVE FIELD UPLINK — VARA SPIRAL RELAY">
+              <div style={{ fontFamily: headFont, fontSize: 22, letterSpacing: 1.5, color: textMain, marginBottom: 4 }}>
+                {char.name || "UNNAMED HERO"}
+              </div>
+              <div style={{ fontFamily: monoFont, fontSize: 12, color: dim }}>
+                {char.heroType.toUpperCase()} · {archetypesAvailable.join(" / ").toUpperCase()}
+                {char.player ? ` · PLAYER: ${char.player}` : ""}
+              </div>
+            </Panel>
+
+            <Panel
+              title="Health"
+              glow={hpColor}
+              tag={hpPct <= 0.25 ? "WARNING — VOID SIGNAL BLEEDING THROUGH" : "VITALS NOMINAL"}
+            >
+              <div style={{ display: "flex", alignItems: "center", gap: 10, marginBottom: 4 }}>
+                <button className="tok-btn" onClick={() => bumpHp(-1)} style={hpBtnStyle(hpColor)}>
+                  −
+                </button>
+                <div style={{ flex: 1 }}>
+                  <div
+                    style={{
+                      display: "flex",
+                      gap: 3,
+                      height: 22,
+                    }}
+                  >
+                    {Array.from({ length: char.maxHp }).map((_, idx) => (
+                      <div
+                        key={idx}
+                        style={{
+                          flex: 1,
+                          background: idx < char.hp ? hpColor : "#111c29",
+                          border: `1px solid ${idx < char.hp ? hpColor : "#22364a"}`,
+                          boxShadow: idx < char.hp ? `0 0 6px -1px ${hpColor}` : "none",
+                        }}
+                      />
+                    ))}
+                  </div>
+                  <div style={{ textAlign: "center", fontFamily: headFont, fontWeight: 700, marginTop: 6, color: hpColor, letterSpacing: 1 }}>
+                    {char.hp} / {char.maxHp} HP
+                  </div>
+                </div>
+                <button className="tok-btn" onClick={() => bumpHp(1)} style={hpBtnStyle(hpColor)}>
+                  +
+                </button>
+              </div>
+              <Field label="Max HP (set by fight's Cinematic Weight)">
+                <input
+                  type="number"
+                  style={{ ...inputStyle, width: 110 }}
+                  value={char.maxHp}
+                  onChange={(e) => {
+                    const v = Math.max(1, parseInt(e.target.value) || 1);
+                    update({ maxHp: v, hp: Math.min(char.hp, v) });
+                  }}
+                />
+              </Field>
+            </Panel>
+
+            <Panel title="Tokens" glow={magenta} tag="OMEGA QUADRANT TRADE STANDARD">
+              <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr", gap: 10 }}>
+                {TOKEN_TYPES.map((t) => (
+                  <div
+                    key={t.key}
+                    style={{
+                      display: "flex",
+                      alignItems: "center",
+                      justifyContent: "space-between",
+                      background: "#0a121d",
+                      border: `1px solid #223546`,
+                      borderLeft: `3px solid ${t.color}`,
+                      borderRadius: 3,
+                      padding: "8px 10px",
+                    }}
+                  >
+                    <span style={{ fontFamily: headFont, fontSize: 12, letterSpacing: 1, color: t.color }}>
+                      {t.key.toUpperCase()}
+                    </span>
+                    <div style={{ display: "flex", alignItems: "center", gap: 8 }}>
+                      <button className="tok-btn" onClick={() => bumpToken(t.key, -1)} style={tokBtnStyle}>
+                        −
+                      </button>
+                      <span style={{ minWidth: 18, textAlign: "center", fontFamily: monoFont, fontWeight: 700 }}>
+                        {char.tokens[t.key] || 0}
+                      </span>
+                      <button className="tok-btn" onClick={() => bumpToken(t.key, 1)} style={tokBtnStyle}>
+                        +
+                      </button>
+                    </div>
+                  </div>
+                ))}
+              </div>
+            </Panel>
+
+            <Panel
+              title="Active Stances"
+              glow={amber}
+              tag="REPUBLIC LICENSED LOADOUT"
+              right={
+                <span style={{ fontFamily: monoFont, fontSize: 10, color: dim }}>tap to expand</span>
+              }
+            >
+              {char.stances.map((s, i) => {
+                const form = formObjs[i];
+                if (!form) return null;
+                const stanceArchetype = char.heroType === "Focused" ? char.archetype1 : s.archetype;
+                const styleObj = (GAME_DATA.styles[stanceArchetype] || []).find((x) => x.name === s.style) || null;
+                return (
+                  <StanceCard
+                    key={i}
+                    i={i}
+                    form={form}
+                    style={styleObj}
+                    archetype={stanceArchetype}
+                    archetypeAbilityText={GAME_DATA.archetypes[stanceArchetype]?.[char.heroType.toLowerCase()]}
+                    heroType={char.heroType}
+                    expanded={!!expanded[i]}
+                    onToggle={() => setExpanded((e) => ({ ...e, [i]: !e[i] }))}
+                  />
+                );
+              })}
+            </Panel>
+
+            <Panel title="Field Notes" glow="#7dffa0" tag="OFF-RECORD — LOCAL STORAGE ONLY">
+              <textarea
+                style={textAreaStyle}
+                value={char.notes}
+                onChange={(e) => update({ notes: e.target.value })}
+                placeholder="Track Challenge tokens held/given, Shields, obstacles, whatever helps at the table..."
+              />
+            </Panel>
+          </>
+        )}
+
+        {tab === "reference" && (
+          <>
+            <Panel title="Token Glossary" glow={magenta} tag="OMEGA QUADRANT TRADE STANDARD — FULL INDEX">
+              {["Basic", "Common", "Archetype-specific"].map((cat) => (
+                <div key={cat} style={{ marginBottom: 14 }}>
+                  <div
+                    style={{
+                      fontFamily: headFont,
+                      fontSize: 11,
+                      letterSpacing: 2,
+                      color: dim,
+                      textTransform: "uppercase",
+                      marginBottom: 6,
+                    }}
+                  >
+                    {cat} tokens
+                  </div>
+                  {TOKEN_GLOSSARY.filter((t) => t.category === cat).map((t) => (
+                    <div
+                      key={t.name}
+                      style={{
+                        background: "#0a121d",
+                        border: `1px solid #223546`,
+                        borderLeft: `3px solid ${t.color}`,
+                        borderRadius: 3,
+                        padding: "8px 12px",
+                        marginBottom: 6,
+                        fontSize: 12.5,
+                        lineHeight: 1.55,
+                      }}
+                    >
+                      <b style={{ color: t.color }}>{t.name}</b>
+                      <div style={{ color: "#c3dced" }}>{t.text}</div>
+                    </div>
+                  ))}
+                </div>
+              ))}
+            </Panel>
+
+            <Panel title="All Forms &amp; Skills" glow={cyan} tag="FEDERATION OPEN ARCHIVE — PUBLIC ACCESS">
+              {GAME_DATA.forms.map((f) => (
+                <div
+                  key={f.name}
+                  style={{
+                    background: "#0a121d",
+                    border: `1px solid #223546`,
+                    borderRadius: 4,
+                    padding: "10px 12px",
+                    marginBottom: 8,
+                    fontSize: 12.5,
+                    lineHeight: 1.55,
+                  }}
+                >
+                  <b style={{ color: cyan }}>{f.name}</b> <span style={{ color: dim }}>({f.alts})</span>
+                  <div>{f.ability}</div>
+                  {f.actions.map((a) => (
+                    <div key={a.name}>
+                      <b>{a.cost}: {a.name}</b> — {a.effect}
+                    </div>
+                  ))}
+                  <div style={{ marginTop: 3, fontStyle: "italic", color: "#7dffa0" }}>Skill: {f.skill}</div>
+                </div>
+              ))}
+            </Panel>
+          </>
+        )}
+
+        {tab === "export" && (
+          <>
+            <Panel title="Export Controls" glow="#7dffa0" tag="TRANSMIT RECORD OFF-DEVICE">
+              <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr", gap: 8 }}>
+                <button onClick={downloadExport} style={linkBtnStyle("#7dffa0")}>
+                  ⬇ DOWNLOAD .TXT
+                </button>
+                <button onClick={() => window.print()} style={linkBtnStyle(cyan)}>
+                  🖨 PRINT / SAVE PDF
+                </button>
+              </div>
+            </Panel>
+
+            <div id="export-sheet">
+              <Panel title="Hero Sheet" glow={amber} tag="FULL RECORD — ALL STANCES &amp; TOKENS">
+                <div style={{ fontFamily: headFont, fontSize: 22, letterSpacing: 1.5, color: textMain, marginBottom: 2 }}>
+                  {char.name || "UNNAMED HERO"}
+                </div>
+                <div style={{ fontFamily: monoFont, fontSize: 12, color: dim, marginBottom: 12 }}>
+                  {char.player ? `PLAYER: ${char.player} · ` : ""}
+                  {char.heroType.toUpperCase()} · {archetypesAvailable.join(" / ").toUpperCase()} · {char.hp}/{char.maxHp} HP
+                </div>
+
+                {archetypesAvailable.map((a) => (
+                  <div
+                    key={a}
+                    style={{
+                      background: "#0a121d",
+                      border: `1px solid #2c3f52`,
+                      borderLeft: `3px solid ${magenta}`,
+                      borderRadius: 3,
+                      padding: "8px 12px",
+                      marginBottom: 8,
+                      fontSize: 12.5,
+                      lineHeight: 1.55,
+                    }}
+                  >
+                    <b style={{ color: magenta }}>
+                      {char.heroType.toUpperCase()} {a.toUpperCase()}
+                    </b>
+                    <div style={{ color: "#c3dced" }}>{GAME_DATA.archetypes[a][char.heroType.toLowerCase()]}</div>
+                  </div>
+                ))}
+
+                <div style={{ fontFamily: headFont, fontSize: 12, letterSpacing: 2, color: amber, margin: "14px 0 8px" }}>
+                  STANCES
+                </div>
+                {char.stances.map((s, i) => {
+                  const form = formObjs[i];
+                  if (!form) return null;
+                  const stanceArchetype = char.heroType === "Focused" ? char.archetype1 : s.archetype;
+                  const styleObj = (GAME_DATA.styles[stanceArchetype] || []).find((x) => x.name === s.style);
+                  const label = styleObj
+                    ? `${styleObj.name.replace(" Style", "")} ${form.name.replace(" Form", "")}`
+                    : form.name;
+                  return (
+                    <div
+                      key={i}
+                      style={{
+                        background: "#0a121d",
+                        border: `1px solid #223546`,
+                        borderRadius: 4,
+                        padding: "10px 12px",
+                        marginBottom: 8,
+                        fontSize: 12.5,
+                        lineHeight: 1.55,
+                      }}
+                    >
+                      <b style={{ color: amber }}>
+                        STANCE {i + 1} — {label.toUpperCase()}
+                      </b>
+                      <div style={{ marginTop: 4 }}>
+                        <span style={{ color: cyan }}>{form.name}</span> ({form.alts})
+                        <div>{form.ability}</div>
+                        {form.actions.map((a) => (
+                          <div key={a.name}>
+                            <b>{a.cost}: {a.name}</b> — {a.effect}
+                          </div>
+                        ))}
+                        <div style={{ fontStyle: "italic", color: "#7dffa0" }}>Skill: {form.skill}</div>
+                      </div>
+                      {styleObj && (
+                        <div style={{ marginTop: 6, borderTop: "1px dashed #223546", paddingTop: 6 }}>
+                          <span style={{ color: magenta }}>
+                            {styleObj.name} (Range {styleObj.range})
+                          </span>
+                          <div>{styleObj.ability}</div>
+                        </div>
+                      )}
+                    </div>
+                  );
+                })}
+
+                <div style={{ fontFamily: headFont, fontSize: 12, letterSpacing: 2, color: amber, margin: "14px 0 8px" }}>
+                  SKILLS
+                </div>
+                <div style={{ fontSize: 12.5, lineHeight: 1.7, marginBottom: 14 }}>
+                  {char.skills.map((sk, i) => (
+                    <div key={i}>{i + 1}. {sk || formObjs[i]?.skill || "—"}</div>
+                  ))}
+                </div>
+
+                <div style={{ fontFamily: headFont, fontSize: 12, letterSpacing: 2, color: amber, margin: "14px 0 8px" }}>
+                  TOKENS ON HAND
+                </div>
+                <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr", gap: 6, marginBottom: 14 }}>
+                  {TOKEN_TYPES.map((t) => (
+                    <div key={t.key} style={{ fontSize: 12.5, borderLeft: `3px solid ${t.color}`, paddingLeft: 8 }}>
+                      {t.key}: <b>{char.tokens[t.key] || 0}</b>
+                    </div>
+                  ))}
+                </div>
+
+                {char.notes && (
+                  <>
+                    <div style={{ fontFamily: headFont, fontSize: 12, letterSpacing: 2, color: amber, margin: "14px 0 8px" }}>
+                      FIELD NOTES
+                    </div>
+                    <div style={{ fontSize: 12.5, lineHeight: 1.6, whiteSpace: "pre-wrap" }}>{char.notes}</div>
+                  </>
+                )}
+              </Panel>
+            </div>
+          </>
+        )}
+
+        <div
+          style={{
+            textAlign: "center",
+            fontFamily: monoFont,
+            fontSize: 9.5,
+            letterSpacing: 2,
+            color: "#3a4c5c",
+            marginTop: 24,
+          }}
+        >
+          — END TRANSMISSION · SIGNAL LOST BEYOND THE DARKMATTER VOID —
+        </div>
+      </div>
+    </div>
+  );
+}
+
+const linkBtnStyle = (color) => ({
+  padding: "9px 12px",
+  fontFamily: headFont,
+  fontSize: 11.5,
+  letterSpacing: 1,
+  border: `1px solid ${color}`,
+  borderRadius: 3,
+  background: `${color}14`,
+  color: color,
+  cursor: "pointer",
+  whiteSpace: "nowrap",
+});
+
+const hpBtnStyle = (color) => ({
+  width: 34,
+  height: 34,
+  borderRadius: 3,
+  border: `1px solid ${color}`,
+  background: "#0a121d",
+  color: color,
+  fontSize: 17,
+  fontWeight: 700,
+  cursor: "pointer",
+});
+
+const tokBtnStyle = {
+  width: 20,
+  height: 20,
+  borderRadius: 2,
+  border: `1px solid #2c3f52`,
+  background: "#111c29",
+  color: textMain,
+  fontSize: 12,
+  fontWeight: 700,
+  cursor: "pointer",
+  lineHeight: 1,
+};
+
+    const root = ReactDOM.createRoot(document.getElementById('root'));
+    root.render(<App />);
+  </script>
+</body>
+</html>
