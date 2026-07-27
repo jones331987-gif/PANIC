@@ -686,6 +686,7 @@ const emptyEnemy = () => ({
   build: "Bumbling Build",
   customSkill: "",
   level: 1,
+  superMove: "",
   healthBarsTotal: 1,
   barsRemaining: 1,
   cinematicWeight: "Middleweight",
@@ -2836,6 +2837,40 @@ function App() {
                   </div>
                 ))}
 
+              {enemy.type !== "Stooge" &&
+                (enemy.type === "Boss" || enemy.level >= 2) &&
+                (enemy.archetypeIsBoss ? (
+                  <div style={{ fontSize: 11.5, color: dim, marginBottom: 12, lineHeight: 1.5 }}>
+                    1E Patch'd Up: this unit knows one unique Super Move from {enemy.archetype} — the patch
+                    doesn't spell out its effect, so homebrew one fitting the Ability above.
+                  </div>
+                ) : (
+                  <Field label={`Super Move (${enemy.type === "Boss" ? "known from the start" : "gained at level 2"})`}>
+                    <select
+                      style={selectStyle}
+                      value={enemy.superMove}
+                      onChange={(e) => updateEnemy({ superMove: e.target.value })}
+                    >
+                      <option value="">— choose —</option>
+                      {GAME_DATA.archetypes[enemy.archetype]?.supers && (
+                        <>
+                          <option value="alpha">
+                            α {GAME_DATA.archetypes[enemy.archetype].supers.alpha.name}
+                          </option>
+                          <option value="delta">
+                            Δ {GAME_DATA.archetypes[enemy.archetype].supers.delta.name}
+                          </option>
+                        </>
+                      )}
+                    </select>
+                    {enemy.superMove && (
+                      <div style={{ fontSize: 11.5, color: "#c3dced", marginTop: 6, lineHeight: 1.5 }}>
+                        {GAME_DATA.archetypes[enemy.archetype].supers[enemy.superMove].effect}
+                      </div>
+                    )}
+                  </Field>
+                ))}
+
               {enemy.type === "Stooge" && (
                 <Field label="Build">
                   <select style={selectStyle} value={enemy.build} onChange={(e) => updateEnemy({ build: e.target.value })}>
@@ -2992,6 +3027,28 @@ function App() {
             </Panel>
 
             <Panel title="Unit Tracker" tag="LIVE COMBAT READOUT" glow={enemyHpColor}>
+              {enemy.superMove && !enemy.archetypeIsBoss && GAME_DATA.archetypes[enemy.archetype]?.supers && (
+                <div
+                  style={{
+                    background: "#0a121d",
+                    border: "1px solid #2c3f52",
+                    borderLeft: `3px solid ${enemy.superMove === "alpha" ? magenta : cyan}`,
+                    borderRadius: 3,
+                    padding: "8px 12px",
+                    marginBottom: 12,
+                    fontSize: 12.5,
+                    lineHeight: 1.55,
+                  }}
+                >
+                  <b style={{ color: enemy.superMove === "alpha" ? magenta : cyan }}>
+                    {enemy.superMove === "alpha" ? "α" : "Δ"}{" "}
+                    {GAME_DATA.archetypes[enemy.archetype].supers[enemy.superMove].name}
+                  </b>
+                  <div style={{ color: "#c3dced" }}>
+                    {GAME_DATA.archetypes[enemy.archetype].supers[enemy.superMove].effect}
+                  </div>
+                </div>
+              )}
               <Field label="Cinematic Weight">
                 <select
                   style={selectStyle}
@@ -3121,6 +3178,11 @@ function App() {
             </Panel>
 
             <Panel title="Boss Archetypes" glow={magenta} tag="BOSS / WARRIOR EXCLUSIVE — FULL INDEX" collapsible defaultOpen={false}>
+              <div style={{ fontSize: 11.5, color: dim, lineHeight: 1.6, marginBottom: 10 }}>
+                1E Patch'd Up: a unit built on a Boss Archetype gets one unique Super Move from it — not
+                detailed here (the patch doesn't spell them out; homebrew one fitting the Ability, or use a
+                Hero Archetype instead for the full Alpha/Delta pair).
+              </div>
               {BOSS_ARCHETYPES.map((b) => (
                 <div
                   key={b.name}
@@ -3144,11 +3206,10 @@ function App() {
             </Panel>
 
             <Panel title="Enemy Advancement" glow="#7dffa0" tag="1E PATCH'D UP — ENEMIES LEVEL WITH THE PARTY" collapsible defaultOpen={false}>
-              <div style={{ fontSize: 11.5, color: dim, marginBottom: 8 }}>
-                Enemies are always the same level as the Heroes. Stooges barely improve, gaining only a Fused
-                or Villain Ability at level 6. Warriors add a Bonus Die like Heroes but never reach d12.
+              <div style={{ fontSize: 11.5, color: "#c3dced", lineHeight: 1.6, marginBottom: 10 }}>
+                Enemies are always the same level as the Heroes.
               </div>
-              <div style={{ display: "grid", gridTemplateColumns: "0.6fr 1fr 1fr 2fr", gap: 4, fontSize: 11.5 }}>
+              <div style={{ display: "grid", gridTemplateColumns: "0.6fr 1fr 1fr 2fr", gap: 4, fontSize: 11.5, marginBottom: 12 }}>
                 <div style={{ color: dim, fontFamily: headFont }}>LVL</div>
                 <div style={{ color: dim, fontFamily: headFont }}>BOSS DIE</div>
                 <div style={{ color: dim, fontFamily: headFont }}>WARRIOR DIE</div>
@@ -3161,6 +3222,29 @@ function App() {
                     <div style={{ color: "#c3dced" }}>{r.benefit}</div>
                   </React.Fragment>
                 ))}
+              </div>
+              <div style={{ fontSize: 12, color: "#c3dced", lineHeight: 1.6 }}>
+                <b style={{ color: "#7dffa0" }}>Stooges</b> almost never improve. At level 6 they finally gain a
+                Fused or Villain Ability — that's all they ever get.
+                <br />
+                <br />
+                <b style={{ color: "#7dffa0" }}>Warriors</b> add a Bonus Die exactly like Heroes, but never reach
+                the mythical d12 — it caps at d10. They gain a Super Move at level 2, and at level 4 gain a
+                <i> second</i> Fused or Villain Ability (a Unit can never have two Villain Archetypes).
+                <br />
+                <br />
+                <b style={{ color: "#7dffa0" }}>Bosses</b> start the fight already knowing a Super Move — chosen
+                from their Archetype, or a unique one if using a Boss (Villain) Archetype. Unlike Hero
+                Archetypes' two Super Moves, each Boss Archetype only has one available. Bosses start with a d4
+                Bonus Die and gain a <i>second</i> d4 at level 2 — from level 3 on, their lowest die steps up
+                each level until both reach d12 at level 10. At level 4 they gain a second Fused/Villain Ability,
+                same restriction as Warriors. At levels 5 and 10 they gain an extra Stance <i>and</i> an extra
+                Super Move — that Super Move must come from an Archetype tied to one of their existing Stances'
+                Styles.
+                <br />
+                <br />
+                <b style={{ color: "#7dffa0" }}>Improved Archetype</b> (Warriors and Bosses, level 8): one of
+                their Fused Abilities becomes its Focused version.
               </div>
             </Panel>
 
