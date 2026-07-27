@@ -53,6 +53,15 @@ const appStorage =
 const GAME_DATA = {"forms": [{"name": "Blaster Form", "alts": "Dragon / Dynamo / Gold / Star", "ability": "Your Actions may apply to one extra target within range. When you add Blaster Form to a Style, increase that Style's maximum range by 1.", "actions": [{"cost": "3+", "name": "Amplify", "effect": "Your next Action this turn has its range increased by 2 and may apply to up to three extra targets within range."}, {"cost": "3+ or 6+", "name": "Shockwave", "effect": "Deal 1 damage to every enemy within range. (6+: Deal 2 damage to one enemy within range.)"}], "skill": "Basically Magic \u2014 an ability that's beyond normal, like lycanthrope, telekinesis, fire magic, or a collection of gadgets."}, {"name": "Control Form", "alts": "Blizzard / Gravity / Owl / Watcher", "ability": "When you add Control Form to a Style, choose one: increase that Style's maximum range by 3, or set that Style's minimum range to 1. Control Token: spend 1 to negate an enemy's Action within range, or 2 to redirect it. Once per turn.", "actions": [{"cost": "3+ or 6+ or 9+", "name": "Suppression", "effect": "You gain 1 Control token and may move one space. (6+: gain another Control token. 9+: gain another Control token and may move one space.)"}], "skill": "Professional \u2014 you always look stylish, cool, and in control. People listen when you make demands, and you have lackeys who do what you say."}, {"name": "Dance Form", "alts": "Circle / Crab / Hurricane / Shuffle", "ability": "After you Throw or Grapple someone, you gain X Speed tokens, where X is how many spaces you moved them. After each space you move using Free Movement, you may choose someone within range and pull them 1 space.", "actions": [{"cost": "3 Speed Tokens", "name": "Try And Keep Up", "effect": "Move two spaces, then heal 2."}], "skill": "Put On A Show \u2014 you can draw as much attention as you want, whenever you want it, away from anything else, for any reason."}, {"name": "Iron Form", "alts": "Fortress / Mountain / Turtle / Void", "ability": "You have Armor (reduce all damage taken by 1, min 0). When you gain Speed tokens, replace half of them (rounded up) with Iron tokens.", "actions": [{"cost": "3+", "name": "Secure", "effect": "Choose two: gain 3 Iron tokens; an ally within range gains 2 Iron tokens; or heal someone within range."}, {"cost": "3+", "name": "Contain", "effect": "Choose two: pull an enemy 2 spaces; Challenge an enemy you can see; or place a Trap into a space within range."}, {"cost": "6+", "name": "Protect", "effect": "Choose four from the Secure and/or Contain lists."}], "skill": "Unmovable \u2014 you can smash through any door, wall, or vehicle, and nothing can move you when you plant your feet."}, {"name": "One-Two Form", "alts": "Chaos / Drill / Hound / Sky", "ability": "After you deal damage to an enemy with an Action, you hit them again for 1 damage.", "actions": [{"cost": "1+", "name": "Slide In", "effect": "Teleport two spaces."}, {"cost": "4+", "name": "Whirlwind", "effect": "Deal 1 damage to up to three enemies within range."}], "skill": "Think Fast \u2014 you never lose in games of skill, and you can fast talk anyone into seeing things your way."}, {"name": "Power Form", "alts": "Blade / Rage / Sun / Tiger", "ability": "When you gain Speed tokens, replace half of them (rounded up) with Power tokens. You may spend up to 3 Power tokens per hit.", "actions": [{"cost": "3+", "name": "Yell", "effect": "You gain 3 Power tokens."}, {"cost": "6+ or 9+", "name": "Crush", "effect": "Deal 3 damage to an enemy within range, unreduceable and unblockable. (9+: may spend any number of Power tokens on this hit.)"}], "skill": "Unstoppable \u2014 you can smash through any door, wall, or vehicle."}, {"name": "Reversal Form", "alts": "Panic / Scorpion / Time / Tornado", "ability": "You have Armor. You do not discard Speed tokens at end of turn. You may only take one Action per turn, but your Action Pool does not empty between turns/rounds.", "actions": [{"cost": "1+", "name": "Counter Attack", "effect": "Teleport within range of an enemy that damaged you this turn, then spend this number on another Action targeting them."}], "skill": "Perfect Timing \u2014 you can perfectly catch or stop anything coming directly at you with a single, well-placed motion."}, {"name": "Shadow Form", "alts": "Moon / Silence / Silver / Snake", "ability": "At the start and end of your turn, you gain 2 Speed tokens. You do not discard Speed tokens at the end of a turn.", "actions": [{"cost": "3 Speed Tokens", "name": "Stunt", "effect": "Place one Fog, Copy, or Trap obstacle into an adjacent space, then teleport two spaces."}], "skill": "Shadow Walker \u2014 no one will ever notice you sneaking around, even in plain sight."}, {"name": "Song Form", "alts": "Melody / Symphony / Remix / Wave", "ability": "At the start of your turn, choose Iron, Power, or Speed: you gain 3 tokens of that type, each ally gains 1.", "actions": [{"cost": "1+ or 4+ or 6+", "name": "Sing Along", "effect": "Choose one ally you can see. Choose one: they remove a token; they heal; or they gain 2 tokens from your song. (4+: choose another. 6+: add a 4 to their Action Pool, they must spend it immediately.)"}], "skill": "Natural Charisma \u2014 people naturally like you. Anyone who is not your enemy is your friend, even if you've just met them."}, {"name": "Vigilance Form", "alts": "Bear / Eternity / Heart / Moment", "ability": "At the start of your turn, heal or discard one token you hold. At the end of your turn, give an enemy in range one Weakness token.", "actions": [{"cost": "1+ or 4+", "name": "Bow Down", "effect": "Give one Weakness token to an enemy within range. (4+: give two instead.)"}, {"cost": "1+ or 4+", "name": "Stand Strong", "effect": "Heal yourself or an ally you can see. (4+: heal yourself AND a different ally.)"}], "skill": "Eyes Wide Open \u2014 you cannot be surprised by anything, and always have a chance to react first."}, {"name": "Wild Form", "alts": "Beast / Platinum / Soul / Storm", "ability": "At the start of your turn, add to your Action Dice for each true: your health bar is at half HP or less; a teammate is Taken Out; you hold a non-Basic token.", "actions": [{"cost": "2 Basic Tokens", "name": "Fury", "effect": "Deal 1 damage to an enemy within range, push them 1 space at end of turn. Usable 3x per turn."}], "skill": "Wind Runner \u2014 you can leap anywhere you can see, run along walls, run as fast as a car, and, with an explanation, fly."}, {"name": "Zen Form", "alts": "Lotus / Mantis / Spiral / World", "ability": "Your Action Pool is predetermined: 7, 5, 3, 1. You may hold multiple Shields (only one active at a time). When an enemy damages/breaks your Shield, deal 1 damage to them.", "actions": [{"cost": "3+ or 7+", "name": "Focus", "effect": "Gain a 2-point Shield, may move one space. (7+: gain a 4-point Shield instead, may move two spaces.)"}], "skill": "Peaceful Heart \u2014 you can calm rampaging beasts, unruly mobs, and anyone acting out of hurt or anger."}], "archetypes": {"Angel": {"description": "A controlling tank focused on Challenge tokens.", "focused": "At the start of your turn, Challenge an enemy you can see, then deal 1 damage to them, then heal 1. After you Challenge an enemy, deal 1 damage to them and heal 1. (Net effect: Challenge, deal 2, heal 2 each turn.)", "fused": "At the start of your turn, Challenge an enemy you can see. After you Challenge an enemy, deal 1 damage to them and heal 1.", "frantic": "At the start of this turn, Challenge an enemy you can see, deal 2 damage to them, and heal.", "tags": ["Ruinous", "Guard"], "supers": {"alpha": {"name": "Heaven's Piledriver", "effect": "Deal 6 damage to an adjacent enemy. That enemy cannot use Free Movement until after the end of their next turn."}, "delta": {"name": "Siren's Scream", "effect": "Challenge and deal 2 damage to all enemies. Then, you gain a 10-point Shield."}}}, "Cavalry": {"description": "A team support leader focused on Shields.", "focused": "At the start and end of your turn, you and each ally adjacent to you gains a 2 point Shield. When your Shield or an ally's Shield breaks, you gain 1 Speed token.", "fused": "At the end of your turn, you and each ally adjacent to you gains a 2 point Shield.", "frantic": "At the start and end of this turn, you and each ally adjacent to you gains a 2 point Shield.", "tags": ["Support", "Mobility"], "supers": {"alpha": {"name": "Call In The Cavalry", "effect": "Deal 2 damage to all enemies, then deal 2 damage to all enemies."}, "delta": {"name": "Inspire Perfection", "effect": "Remove up to 4 Common tokens from yourself and each ally you can see. Give two Power tokens and two Iron tokens to yourself and each ally you can see. You and each ally you can see heals."}}}, "Cyborg": {"description": "A versatile combo warrior focused on Basic tokens of all types.", "focused": "At the start of your turn, you gain four Basic Tokens of your choice.", "fused": "At the start of your turn, you gain two Basic Tokens of your choice.", "frantic": "At the start of this turn, you gain four Basic Tokens of your choice.", "tags": ["Preparation", "Technical"], "supers": {"alpha": {"name": "Draining Knuckle", "effect": "Deal 3 damage to an adjacent enemy, and they discard all Basic Tokens they hold. Then, you gain 2 Power tokens, 2 Iron tokens, and 3 Speed tokens."}, "delta": {"name": "Drive Install", "effect": "You gain 6 Power tokens, 6 Iron tokens, and 6 Speed tokens. For the rest of this fight, you can spend 1 more Power token and 1 more Iron token per hit. For the rest of this fight, you only discard 1 Speed token at the end of each turn, instead of 3."}}}, "Demon": {"description": "An aggressive monster focused on combo breaking.", "focused": "At the end of your turn, you gain 2 Chaos tokens.", "fused": "At the end of your turn, you gain 1 Chaos token.", "frantic": "At the end of this turn, you gain 2 Chaos tokens. (Chaos token: spend any time to immediately take a 4 Action, interrupting the current turn.)", "tags": ["Ruinous", "Mobility"], "supers": {"alpha": {"name": "Unending Despair", "effect": "Target an adjacent enemy. Give them 4 Burning tokens and 4 Weakness tokens. You gain 2 Iron tokens, 2 Power tokens, 2 Speed tokens, and 2 Chaos tokens."}, "delta": {"name": "Dancing Mad", "effect": "Teleport three spaces, then deal 2 damage to an adjacent enemy. Repeat as many times as you like. After you damage the same enemy twice, deal 1 damage to all enemies within Range 1-3, then this Super Move ends."}}}, "Flametongue": {"description": "A zoning combo fighter focused on Burning tokens.", "focused": "After you deal damage to an enemy with an Action, give that enemy one Burning token.", "fused": "The first time you deal damage to an enemy during your turn, give that enemy two Burning tokens.", "frantic": "During this turn, after you deal damage to an enemy with three or less Burning tokens, give them one Burning token.", "tags": ["Aggro", "Technical"], "supers": {"alpha": {"name": "Erupting Burning Fist", "effect": "Deal 4 damage to an adjacent enemy, push them 4 spaces, and give them Burning Tokens until they hold 6."}, "delta": {"name": "Watch The World Burn", "effect": "Place a Trap under each enemy you can see, then give each of those enemies 4 Burning tokens."}}}, "Gunkata": {"description": "A defensive zoning fighter focused on keeping their distance.", "focused": "At the start of your turn, push every adjacent enemy one space, then move one space. At the end of your turn, deal 1 damage to each enemy within range.", "fused": "At the end of your turn, deal 1 damage to each enemy within range.", "frantic": "At the end of this turn, you may move one space, then deal 1 damage to each enemy within range. Then, you may move one space.", "tags": ["Aggro", "Zoning"], "supers": {"alpha": {"name": "Sniping Point", "effect": "Your maximum range is infinite, until the end of this Round. Then, deal 7 damage to an enemy within range."}, "delta": {"name": "Lead Rain", "effect": "Target an enemy within range. Deal 1 damage to that enemy and all adjacent enemies, five times in a row."}}}, "Phantom": {"description": "A defensive, supporting zoner focused on versatility.", "focused": "At the start of your turn, you gain 4 Poltergeist tokens.", "fused": "At the start of your turn, you gain 2 Poltergeist tokens.", "frantic": "At the start of this turn, you gain 4 Poltergeist tokens.", "tags": ["Zoning", "Ruinous"], "supers": {"alpha": {"name": "Poltergeist Panic", "effect": "You may move each Rubble or Trap you can see, up to three spaces each, into different spaces. Then every enemy standing on an obstacle takes 3 damage, even if it wasn't an obstacle you moved onto them."}, "delta": {"name": "Arcana Install", "effect": "You gain 6 Poltergeist Tokens. Until the end of this Round, you can spend up to 3 Poltergeist Tokens per Action instead of 2. Until the end of this combat, at the start of your turn, you gain 2 Poltergeist Tokens."}}}, "Punk": {"description": "An aggressive tank focused on revenge.", "focused": "At the start of your turn, add X to your Action Pool, where X = twice the damage on your current health bar (X=1 if full).", "fused": "At the start of your turn, add X to your Action Pool, where X = the damage on your current health bar (X=1 if full).", "frantic": "At the start of this turn, add X to your Action Pool, where X = twice the damage on your current health bar (X=1 if full).", "tags": ["Desperation", "Aggro"], "supers": {"alpha": {"name": "Knuckle Sandwich", "effect": "Deal 5 damage to an adjacent enemy, then give them 4 Weakness tokens and your Challenge token. Then, you may push them up to three spaces."}, "delta": {"name": "Everybody, Get 'Em!", "effect": "Deal 3 damage to an adjacent enemy. Then, each of your allies in play (other than yourself) may each deal 3 damage to one enemy within their range."}}}, "Teacher": {"description": "A mentor focused on letting their allies do all the work.", "focused": "At the end of your turn, you gain two Inspired tokens.", "fused": "At the end of your turn, you gain an Inspired token.", "frantic": "At the end of this turn, you gain two Inspired tokens. (Inspired token: spend during an ally's turn to roll and add a number to their Action Pool.)", "tags": ["Support", "Preparation"], "supers": {"alpha": {"name": "My Final Technique", "effect": "Deal 99 damage to an enemy within range, then remove yourself from play for the rest of combat. You cannot come back."}, "delta": {"name": "Remember My Teachings", "effect": "Only usable while Taken Out, in place of your Heroic Spirit pass, no numbers required. That ally rolls their Action Dice at maximum, adds an 8 to their Action Pool, gains a 4-point Shield, and heals."}}}, "Trickster": {"description": "A defensive tank focused on never being pinned down.", "focused": "You may spend any tokens you hold as if they were Iron tokens. When you spend Iron tokens to reduce damage taken, push your attacker 1 space, then you may move 1 space.", "fused": "You may spend any Basic Tokens you hold as Iron tokens. When you spend Iron tokens to reduce damage taken, you may move 1 space.", "frantic": "Until your next turn, you may spend any tokens you hold as if they were Iron tokens. When you spend Iron tokens to reduce damage taken, push your attacker 1 space, then you may move 1 space.", "tags": ["Zoning", "Guard"], "supers": {"alpha": {"name": "Funny Little Box Of Pain", "effect": "Target an enemy at Range 2. Push everyone adjacent to the target one space. Then place Walls into each space adjacent to the target and place a Deadly Trap beneath them (2 damage, cannot be removed)."}, "delta": {"name": "Steal Strength", "effect": "Target an adjacent character. They discard all tokens they hold, and you gain Iron tokens equal to the number of tokens discarded."}}}, "Underdog": {"description": "A defensive warrior focused on Basic tokens of all types.", "focused": "At the start of your turn, you gain one Basic token of your choice. After you take damage, you gain one Basic token of your choice.", "fused": "Same as Focused, but you cannot choose a Basic token you are already holding.", "frantic": "At the start of this turn, you gain one Basic token of your choice. Until your next turn, after you take damage, you gain one Basic token of your choice.", "tags": ["Desperation", "Preparation"], "supers": {"alpha": {"name": "Lucky Hit", "effect": "Deal 4 damage to an adjacent enemy. Then, that enemy discards all Basic tokens they hold, discards all Shields they hold, and cannot have Armor or Shields for the rest of this Round."}, "delta": {"name": "Hyper Install", "effect": "You gain 5 Shield and heal. For the rest of this fight, at the start of every turn: enemy turn = gain 1 Iron + 1 Speed; allied turn = gain 1 Power + heal 1; your turn = gain all of those plus heal 1."}}}, "Wardancer": {"description": "A rush-down brawler focused on high numbers.", "focused": "After rolling your Action Dice, either increase all of your numbers by 1, or increase one of your numbers by 4.", "fused": "After rolling your Action Dice, increase two of your numbers by 2.", "frantic": "After rolling your Action Dice this turn, either increase all of your numbers by 1, or increase one of your numbers by 4.", "tags": ["Mobility", "Aggro"], "supers": {"alpha": {"name": "Become My Canvas", "effect": "Deal 2 damage to an enemy within range, ignoring Armor and Shields. Then deal 2 more. Then deal 3 more, ignoring Armor and Shields each time."}, "delta": {"name": "Lightning Drop", "effect": "Teleport to any space on the map. Then deal 4 damage to an adjacent enemy. Then deal 2 damage to all enemies within Range 1-4."}}}, "Winterblossom": {"description": "A controlling bastion focused on Weakness tokens.", "focused": "At the start of every turn, give 1 Weakness token to one enemy within range.", "fused": "At the start and end of your turn, give 1 Weakness token to one enemy within range.", "frantic": "At the start and end of this turn, give 2 Weakness tokens to one enemy within range.", "tags": ["Technical", "Guard"], "supers": {"alpha": {"name": "You Are Nothing.", "effect": "Deal 4 damage to an enemy within range, pull them up to 3 spaces, then give them Weakness tokens until they hold 6."}, "delta": {"name": "Blizzard", "effect": "Until the end of this Round, increase your maximum range by 2. Also until the end of this Round, at the end of every turn, give 1 Burn token and 1 Weakness token to every enemy within range, then you may move 1 space."}}}}, "styles": {"Angel": [{"name": "Halcyon Style", "range": "1-2", "ability": "At the start of your turn, remove one token you hold. After you remove tokens using an Action or Ability, you gain an equal number of Iron tokens."}, {"name": "Judgment Style", "range": "1", "ability": "When an enemy with your Challenge starts their turn, they do not roll their lowest Action Die. It is discarded and unused."}, {"name": "Shining Style", "range": "1", "ability": "At the start of your turn, all obstacles and enemies adjacent to you are pushed one space. Enemies cannot move into the spaces adjacent to you."}, {"name": "Singing Style", "range": "2-4", "ability": "At the start and end of your turn, you gain a 2 point Shield. After each Action you perform, if you have an active Shield, increase its value by 1."}, {"name": "Winged Style", "range": "1-2", "ability": "Edges cannot remove you from play. At the end of every turn, you may move two spaces."}], "Cavalry": [{"name": "Charging Style", "range": "1", "ability": "At the start of your turn, you may move 2 spaces. At the start of each ally's turn, they may move 2 spaces."}, {"name": "Heroic Style", "range": "1-2", "ability": "Whenever an ally within range takes damage, they take half that damage (rounded down) and you take the other half (rounded up)."}, {"name": "Jumping Style", "range": "1", "ability": "At the start and end of your turn, you may teleport one, two, or three spaces."}, {"name": "Rallying Style", "range": "1", "ability": "At the end of your turn, you and each ally within range heals. At the start of each ally's turn, if within range of you, they may heal."}, {"name": "Unbreakable Style", "range": "1-2", "ability": "After each Action you perform, give one Iron token to an ally other than yourself within range. Your allies within range may spend your tokens."}], "Cyborg": [{"name": "Armored Style", "range": "1-2", "ability": "After you spend Iron tokens, you heal 1. (2 Iron Tokens: You, Stay \u2014 Challenge an enemy within range; they discard three Speed tokens.)"}, {"name": "Incinerator Style", "range": "1-3", "ability": "When you spend Power tokens to boost damage, give one Burning token to the target. (2 Power Tokens: Flamethrower \u2014 an enemy within range takes 1 damage, gains a Burning token, and is pushed 1 space.)"}, {"name": "Machine Style", "range": "1-2", "ability": "You may spend your Basic Tokens as if they were any other Basic Tokens (Iron, Power, Speed)."}, {"name": "Rocket Style", "range": "1", "ability": "After you push someone, you may teleport to any empty space adjacent to them. (2 Speed Tokens: Rocket Tackle \u2014 push an adjacent enemy or ally two spaces.)"}, {"name": "Syphon Style", "range": "1-2", "ability": "At the end of your turn, choose a token you hold. Either replace it with a Power token, or gain another copy of it."}], "Demon": [{"name": "Dark Style", "range": "2-4", "ability": "You can see and target enemies through Fog. At the end of your turn, place a Fog obstacle into your space."}, {"name": "Ogre's Style", "range": "1-2", "ability": "Your Throw Actions may target any number of enemies within range. After you Throw an enemy, they take 1 damage."}, {"name": "Slasher Style", "range": "1", "ability": "At the end of every turn, you deal 1 damage to an adjacent enemy."}, {"name": "Vampire Style", "range": "1", "ability": "After you deal damage with a hit, you heal 1. After you give Weakness tokens to an enemy, you gain that many Power tokens."}, {"name": "Zombie Style", "range": "1", "ability": "You have Armor. At the start of your turn, if your HP is 3 or less, you heal."}], "Flametongue": [{"name": "Burning Style", "range": "2-4", "ability": "After you target an enemy with an Action, if they have four Burning tokens or less, give them 1 Burning token."}, {"name": "Explosion Style", "range": "2-4", "ability": "After you deal damage to an enemy, push that enemy one space. After you destroy an obstacle, replace it with an Edge."}, {"name": "Inferno Style", "range": "1-2", "ability": "At the end of your turn, after your Burning tokens have already triggered, you gain three Burning tokens. After an enemy damages you with an Action, you may give them all of your Burning tokens."}, {"name": "Phoenix Style", "range": "1", "ability": "Whenever you would take damage from Burning tokens or from Traps, you heal that much damage instead."}, {"name": "Volcanic Style", "range": "1-3", "ability": "After you spend Speed tokens on Free Movement, you may place a Trap into each space you exit. You do not take damage from entering a space with a Trap."}], "Gunkata": [{"name": "Akimbo Style", "range": "3-5", "ability": "After you deal damage to someone, you move one space."}, {"name": "Artillery Style", "range": "3-8", "ability": "You can see and target enemies through Fog and Walls."}, {"name": "Crosshair Style", "range": "4-8", "ability": "You ignore Armor and Shields when dealing damage. Weakness tokens you hold and Iron tokens your enemies hold do not reduce the damage you deal."}, {"name": "Ricochet Style", "range": "2-4", "ability": "After you deal damage to an enemy with an Action, you may deal 1 damage to a different enemy within 3 spaces of them."}, {"name": "Ten Thousand Style", "range": "2-3", "ability": "Adds a die to your Action Dice. (2+: Point Blank Shot \u2014 deal 1 damage to an adjacent enemy, then push them 1 space.)"}], "Phantom": [{"name": "Aura Style", "range": "1-3", "ability": "At the start of your turn, you gain a 3 point Shield. When an enemy within range damages or breaks a Shield, you may move that enemy one space. After a Shield within range breaks, you gain 1 Iron token."}, {"name": "Crying Style", "range": "1-4", "ability": "At the start of your turn, give one Weakness token to all enemies within range. At the end of your turn, Challenge an enemy within range and give them one Weakness token."}, {"name": "Puppet's Style", "range": "1-5", "ability": "You may use Speed tokens to move any ally, enemy, or obstacle within range, using the normal Free Movement rules."}, {"name": "Spirit Style", "range": "1-3", "ability": "Edges cannot remove your Copies from play. You and your Copies can move over Walls as though they were empty space."}, {"name": "Vortex Style", "range": "1-3", "ability": "Edges cannot remove you from play. When you stand on an Edge, every other Edge counts as an adjacent space you can move to."}], "Punk": [{"name": "Bleeding Style", "range": "1", "ability": "You don't get Taken Out at zero HP; you can keep fighting as long as you remain in play. (2 HP: Lash Out \u2014 push an adjacent enemy two spaces, spending your own HP.)"}, {"name": "Brawling Style", "range": "1", "ability": "After your Shield breaks, you gain 1 Power token. After you deal damage without spending a Power token on that hit, you gain 1 Power token. (2 Power Tokens: Tough It Out \u2014 gain a 2 point Shield.)"}, {"name": "Flashy Style", "range": "1", "ability": "After you roll your Action Dice, you may combine two of your numbers into a single, larger number."}, {"name": "Knockdown Style", "range": "1", "ability": "After you take damage from an enemy, you deal 1 damage back to them."}, {"name": "Taunting Style", "range": "1", "ability": "After you take damage, you gain 1 Iron token. After you take damage from an enemy with your Challenge, you may move one space."}], "Teacher": [{"name": "Patient Style", "range": "1", "ability": "At the end of your turn, your Speed tokens become Iron tokens. You may only take one Action per turn; your Action Pool does not empty between Turns/Rounds."}, {"name": "Elder Style", "range": "1-2", "ability": "This Stance's Unique Actions cost 1 less (minimum 1+ or 2 tokens). Once per turn you may use any Unique Action you know, from any Stance, for free."}, {"name": "Mastermind Style", "range": "No range \u2014 targets allies", "ability": "You cannot perform Actions yourself. Instead, spend your numbers on your allies, making them perform Actions for you, using their location/range/bonuses."}, {"name": "Motivating Style", "range": "1-2", "ability": "At the end of your turn, allies within range heal, and you gain an Inspired token."}, {"name": "Training Style", "range": "1", "ability": "At the end of your turn, give an ally one Training token. (Training token: spend before an Action to increase all numbers in that Action by 1, including cost. Max 1/turn.)"}], "Trickster": [{"name": "Caged Style", "range": "1", "ability": "Adjacent enemies cannot gain or spend Speed tokens."}, {"name": "Mysterious Style", "range": "1-2", "ability": "At the start of your turn, place a Fog obstacle into your space. While you stand in Fog, your maximum range is doubled. (3 Speed/Iron Tokens: Ghost Walk \u2014 place Fog within range, then teleport to a Fog obstacle within range.)"}, {"name": "Illusion Style", "range": "1-3", "ability": "After an enemy damages you while within range of at least one of your Copies, you deal 1 damage to them (2 if within range of 3+ Copies). You may spend Copies as Iron tokens."}, {"name": "Hidden Style", "range": "1-3", "ability": "You may move through Walls as though empty space, and can see/target through Walls. (3 Iron tokens: Sudden Strike \u2014 deal 2 damage to an enemy within range.)"}, {"name": "Whip Style", "range": "2-5", "ability": "Your Throw Actions target one person within range. When you Throw or Grapple an enemy, they take 2 damage."}], "Underdog": [{"name": "Collateral Style", "range": "1-2", "ability": "After you destroy an obstacle, you gain one Basic token of your choice."}, {"name": "Distracting Style", "range": "1-2", "ability": "After an enemy damages you, if they have no Weakness tokens, give them one. (1+ or 2 Basic Tokens: Flare \u2014 move one space, then give a Weakness token to an enemy within range.)"}, {"name": "Eye of the Style", "range": "1", "ability": "At the start of your turn, you gain a Bonus of your choice."}, {"name": "Lucky Style", "range": "1", "ability": "You have Armor, and add an extra die to your Action Dice."}, {"name": "Misfortune's Style", "range": "1-3", "ability": "When you would take damage from a Trap, deal that damage to an enemy within range instead (or gain a Power token if none). (1+ or 3 Basic Tokens: Bad Luck \u2014 place a Trap within range.)"}], "Wardancer": [{"name": "Forbidden Style", "range": "1-2", "ability": "At the start of your turn, take 2 damage (cannot drop below 1 HP). This Style attaches to TWO Forms at once \u2014 you gain the Abilities and Unique Actions of both, combining their Action Dice."}, {"name": "Lightning Style", "range": "1", "ability": "After you deal damage, you gain 1 Speed token."}, {"name": "Overwhelming Style", "range": "1", "ability": "You ignore Armor when dealing damage. When an enemy hits you with an Action, you may spend a Power token to deal 1 damage to them and push them 1 space."}, {"name": "Relentless Style", "range": "1", "ability": "When you deal damage to an enemy, immediately push them one space and then move into the empty space they left."}, {"name": "Weightless Style", "range": "1", "ability": "All spaces are Empty spaces to you. Edges cannot remove you from play. Rubble does not make you discard Speed tokens. Traps deal no damage to you."}], "Winterblossom": [{"name": "Crystal Style", "range": "1-2", "ability": "When one of your Copies is destroyed, it deals 1 damage to every enemy adjacent to it."}, {"name": "Frozen Style", "range": "1", "ability": "After an enemy moves into an empty space adjacent to you, you may give them one Weakness token."}, {"name": "Precision Style", "range": "1-2", "ability": "Your Actions deal +1 damage to enemies with Armor or Shields. When you target an enemy with an Action, they must discard 1 Iron token."}, {"name": "Pressure Style", "range": "1-2", "ability": "At the start of your turn, give one Weakness token to every enemy within range."}, {"name": "Reflected Style", "range": "2-3", "ability": "At the start of your turn, you may place up to three Walls into empty adjacent spaces. You can see and target enemies through Walls."}]}};
 
 const ARCHETYPE_NAMES = Object.keys(GAME_DATA.archetypes);
+
+// Flat lookup of every Style by name, regardless of which (hero) Archetype it
+// belongs to — Boss Archetypes reference Styles across the whole book.
+const STYLE_BY_NAME = {};
+Object.values(GAME_DATA.styles).forEach((list) => {
+  list.forEach((s) => {
+    STYLE_BY_NAME[s.name] = s;
+  });
+});
 const HERO_TYPES = ["Focused", "Fused", "Frantic"];
 const TOKEN_TYPES = [
   { key: "Iron", color: "#9db4c9" },
@@ -143,6 +152,261 @@ const TOKEN_GLOSSARY = [
   },
 ];
 
+
+const BASIC_ACTIONS = [
+  { cost: "X", name: "Movement", patched: false, effect: "You gain X Speed tokens." },
+  {
+    cost: "1+ or 3+ or 5+ or 7+ or 9+",
+    name: "Damage",
+    patched: false,
+    effect:
+      "Choose one enemy within your range. Deal 1 damage to them. 3+: Deal 2 instead. 5+: Deal 3 instead, and push them 1 space away. 7+: Deal 4 instead, and push them 1 more space. 9+: Deal 5 instead, and push them 1 more space.",
+  },
+  {
+    cost: "1+ or 3+ or 5+ or 7+ or 9+",
+    name: "Throw",
+    patched: true,
+    effect:
+      "Push an adjacent enemy 1 space. 3+: Push them 2 spaces instead. 5+: Push them 3 spaces instead, and deal 1 damage. 7+: Push them 4 spaces instead, and deal 2 damage. 9+: Push them 5 spaces instead, and deal 3 damage.",
+  },
+  {
+    cost: "X",
+    name: "Grapple",
+    patched: true,
+    effect: "Target someone within Range 1-X. Pull them up to 3 spaces.",
+  },
+  {
+    cost: "1+ or 4+ or 8+",
+    name: "Open The Path",
+    patched: false,
+    effect:
+      "Choose an obstacle within range and destroy it. 4+: Also destroy every obstacle adjacent to it. 8+: Also destroy every obstacle adjacent to those obstacles.",
+  },
+  {
+    cost: "1+",
+    name: "A Challenger Approaches",
+    patched: false,
+    effect: "Challenge an enemy within Range 1-4.",
+  },
+  {
+    cost: "1+ or 4+ or 7+",
+    name: "Put It Out!",
+    patched: true,
+    effect:
+      "Remove one non-Rare token from someone within range. 4+: Remove up to two more. 7+: Remove up to two more.",
+  },
+  {
+    cost: "4+",
+    name: "Bring It On!",
+    patched: true,
+    effect: "Challenge any number of enemies within Range 1-3.",
+  },
+  {
+    cost: "5+",
+    name: "Rescue",
+    patched: false,
+    effect:
+      "Choose an ally within range with zero HP, or an ally who is not in play. That ally heals. If not in play, they return to play in an empty space of their choice.",
+  },
+];
+
+const BONUSES_DATA = [
+  {
+    name: "Default",
+    text: "+2 max HP to every Hero in the fight. Free at the start of Lightweight/Middleweight/Heavyweight fights, but can be given up for a different Bonus to one Hero, or a Penalty to one enemy. Never chooseable otherwise.",
+  },
+  { name: "Counter", text: "You gain 2 Control tokens." },
+  { name: "Defensive", text: "You gain Armor until the end of this round." },
+  { name: "Found An Opening", text: "Add a number to your Action Pool. You may hold onto it until you want to spend it." },
+  { name: "Freedom", text: "For the rest of this round, you gain 2 Speed tokens at the start of each turn." },
+  { name: "Power Up", text: "You gain 2 Iron, Power, and Speed tokens." },
+  { name: "Talk Big", text: "Challenge an enemy you can see, then pull them up to four spaces." },
+  { name: "Tactics", text: "Place four Obstacles into empty spaces — any kind, anywhere you want." },
+  { name: "Vigor", text: "You heal twice the Heal Value." },
+  { name: "Willpower", text: "You gain a 4-point Shield." },
+];
+
+const PENALTIES_DATA = [
+  { name: "Burned", text: "You gain 4 Burning tokens." },
+  { name: "Dazed", text: "Your Stance's Abilities don't work for the rest of this round. You can still use its Unique Actions." },
+  { name: "Defenseless", text: "Destroy your active Shield. You cannot have Armor or use Shields for the rest of this round." },
+  {
+    name: "Enraged",
+    text: "For the rest of this round, after you take damage, you also take the Challenge token of whoever damaged you (replacing any you're already holding).",
+  },
+  { name: "Exhausted", text: "You gain 4 Weakness tokens." },
+  {
+    name: "Handcuffed",
+    text: "Pick someone within 2 spaces and pull them 1 space — you're now partners and neither of you can move/teleport away from the other. Both can spend Speed to move the other; forced movement on one pulls the other along. Can't Throw each other.",
+  },
+  {
+    name: "Missed Opportunity",
+    text: "On your next turn, after rolling your Action Dice, discard the highest number in your Action Pool (only one, if tied).",
+  },
+  { name: "Power Down", text: "Discard all Basic Tokens you hold. You cannot gain Power or Iron tokens for the rest of this round." },
+  { name: "Spotlight", text: "Destroy all of your Copies. For the rest of this round, enemies ignore Fog when trying to see you." },
+  { name: "Trapped", text: "Place a Trap in your space and each empty adjacent space." },
+];
+
+/* ---------- GM Toolkit data ---------- */
+const BOSS_ARCHETYPES = [
+  {
+    name: "The Blur",
+    ability: "After you perform an Action, you may move one space.",
+    flavor: "The Blur never stands still.",
+    styles: ["Jumping Style", "Lightning Style", "Rocket Style", "Winged Style"],
+  },
+  {
+    name: "The Immortal",
+    ability: "The first time you deal damage with an Action each turn, you heal.",
+    flavor: "The Immortal drains life with every blow.",
+    styles: ["Elder Style", "Phoenix Style", "Vampire Style", "Vortex Style"],
+  },
+  {
+    name: "The Giant",
+    ability:
+      "You take up a 2x2 space on the battle grid. Your maximum range is increased by 1 in all Stances. Edges don't remove you unless your entire 2x2 space is over Edge. You can move over Walls, turning them to Rubble and discarding 1 Speed token.",
+    flavor: "The Giant is huge, and nothing gets in their way.",
+    styles: ["Knockdown Style", "Ogre's Style", "Overwhelming Style", "Whip Style"],
+  },
+  {
+    name: "The Necromancer",
+    ability:
+      "At the start of your turn, place a Copy into an empty space you can see. At the end of your turn, each of your Copies may move one space, then each Copy deals 1 damage to one adjacent enemy.",
+    flavor: "The Necromancer leads an army of the dead.",
+    styles: ["Charging Style", "Mastermind Style", "Spirit Style", "Zombie Style"],
+  },
+  {
+    name: "The Swarm",
+    ability:
+      "At the end of your turn, for each Copy you have in play, choose one: gain 1 Power token; gain 1 Iron token; move 1 space; each Copy may move 1 space; or destroy a Copy to deal 1 damage to each enemy adjacent to it.",
+    flavor: "The Swarm grows stronger the more of them there are.",
+    styles: ["Crystal Style", "Illusion Style", "Ten Thousand Style", "Syphon Style"],
+  },
+  {
+    name: "The Tank",
+    ability: "You have Armor. When you are Pushed or Pulled, you move one less space.",
+    flavor: "The Tank is built to last.",
+    styles: ["Artillery Style", "Aura Style", "Caged Style", "Unbreakable Style"],
+  },
+  {
+    name: "The Untouchable",
+    ability:
+      "At the start of your turn, you gain one Control token. You can spend one Control token to Counter an enemy's Action — that Action targets its user in addition to its other targets.",
+    flavor: "The Untouchable can redirect everything you throw at them.",
+    styles: ["Frozen Style", "Judgment Style", "Misfortune's Style", "Slasher Style"],
+  },
+  {
+    name: "The Vehicle",
+    ability:
+      "You take up as much or as little space as you want (fixed once drawn). Allies and enemies can move on top of you and move with you; spaces inside you are always in your Range. Edges don't remove you unless your whole space is over Edge. You can move over Walls, turning them to Rubble and discarding a number from your Action Pool.",
+    flavor: "A car, train, helicopter, or other transport — armed, and usually crewed.",
+    styles: ["Explosion Style", "Machine Style", "Precision Style", "Ricochet Style"],
+  },
+];
+
+const ENEMY_TYPE_INFO = {
+  Warrior: {
+    summary: "Roughly equal to a single Hero. One Unit, one Stance, one Health Bar, one turn per Round.",
+    checklist: [
+      "Create one Stance (one Style + one Form).",
+      "Choose an Archetype — gain its Fused Ability (or take a Boss Archetype Ability instead).",
+      "Get one Skill from their Form.",
+      "No Build.",
+    ],
+  },
+  Stooge: {
+    summary:
+      "A group sharing one Health Bar and one Stance. One Stooge on the map per Action Die in their Stance.",
+    checklist: [
+      "Create one Stance (one Style + one Form) — its Action Dice count sets group size.",
+      "Choose a Build (most Stooges are Bumbling, but any works).",
+      "No Archetype Ability, no Skill.",
+      "1 or 2 Health Bars — 2 Health Bars = Super Stooge, gains a Fused Archetype Ability and takes 2 turns/Round.",
+      "Each Stooge gets 1 Action/turn. Extra Actions beyond the number of living Stooges must be spent on Reinforcements (1+: heal, place a Stooge anywhere in play).",
+    ],
+  },
+  Boss: {
+    summary: "At least 2 Units, up to 5. Three Stances, multiple Health Bars, multiple turns per Round.",
+    checklist: [
+      "Choose an Archetype — gain its Fused Ability (or take a Boss Archetype Ability instead).",
+      "Create three Stances, each a different Form; at least one Stance's Style must be from your Archetype.",
+      "Add a Bonus Die to the Action Dice of every Stance.",
+      "Get one Skill from each Form, plus a custom 4th Skill (two-word profession/attitude).",
+      "No Build.",
+      "Can't repeat the same Stance two turns in a row. If Taken Out by ring-out as the last enemy standing, returns to play at the start of their next turn after taking 3 damage.",
+    ],
+  },
+};
+
+const ENEMY_ADVANCEMENT_TABLE = [
+  { level: 1, bossDie: "d4", warriorDie: "—", benefit: "Bosses gain a Super Move" },
+  { level: 2, bossDie: "d4, d4", warriorDie: "d4", benefit: "Warriors gain a Super Move" },
+  { level: 3, bossDie: "d6, d4", warriorDie: "d4", benefit: "—" },
+  { level: 4, bossDie: "d6, d6", warriorDie: "d6", benefit: "Gain an additional Archetype" },
+  { level: 5, bossDie: "d8, d6", warriorDie: "d6", benefit: "Bosses gain a 4th Stance + Super" },
+  { level: 6, bossDie: "d8, d8", warriorDie: "d8", benefit: "Stooges gain an Archetype" },
+  { level: 7, bossDie: "d10, d8", warriorDie: "d8", benefit: "—" },
+  { level: 8, bossDie: "d10, d10", warriorDie: "d10", benefit: "Improve an existing Archetype" },
+  { level: 9, bossDie: "d12, d10", warriorDie: "d10", benefit: "—" },
+  { level: 10, bossDie: "d12, d12", warriorDie: "d10", benefit: "Bosses gain a 5th Stance + Super" },
+];
+
+const COMPLICATIONS_DATA = [
+  {
+    name: "Guest Heroes",
+    text:
+      "An ally joins for this fight — build them as a normal enemy with one Health Bar, hand them to the Heroes. Adds one Hero Slot and one Enemy Slot to the Initiative Meter. Any player can take their turns; a Guest Boss keeps all its Stances.",
+  },
+  {
+    name: "Uneven Fights",
+    text:
+      "Assign more Health Bars than there are Heroes (or enemies) to add extra turns and toughness. Heroes split the extra HP evenly or hand whole bars to specific players; Directors can be as uneven as they like. Always use this for 1v1/2v2 — short Rounds break the system otherwise. Always give each side at least 3 Health Bars.",
+  },
+  {
+    name: "Switched Sides",
+    text:
+      "A Hero can fight for the enemy team (acting on Enemy Slots) or an enemy can join the Heroes (as a Guest Character). Rebalance with Uneven Fights or by adding/removing Enemy Units.",
+  },
+  {
+    name: "Three Way Battles",
+    text:
+      "Two enemy slots per Hero slot — Team A and Team B, each built like a normal encounter. Ally is fluid: helping someone earns a Favor token (labelled A/B/Hero), max 1/turn. Spend a Favor token to redirect an attacker at the other team instead of your side; only one Favor token can be used per turn, first-come-first-served.",
+  },
+  {
+    name: "Higher Stakes",
+    text:
+      "Add Bonuses or Penalties to either side — must be balanced (1 Bonus for one side = 1 Bonus or 1 Penalty for the other), but not necessarily evenly distributed. A great way to make a specific Boss scarier.",
+  },
+];
+
+const BETWEEN_FIGHT_DATA = [
+  {
+    name: "Skills, In General",
+    text:
+      "If something relates to a Skill you have, you're hyper-competent and only fail against incredible odds or equally skilled opposition. Outside your Skills, you're comically inept and guaranteed to fail — but failure never blocks progress, it just makes the road bumpier.",
+  },
+  {
+    name: "Your Debut",
+    text:
+      "Each Hero's opening scene, in any order. Set the scene, then describe using at least two Skills to get through it and look cool doing it. Once everyone's debuted, the Director kicks off the session's first fight.",
+  },
+  {
+    name: "A Spot of Trouble",
+    text:
+      "One Trouble per Hero between fights (a two-Hero problem counts as two Troubles). Whoever steps up needs an applicable Skill to succeed — no Skill means a colorful failure, but progress continues either way. Once you've solved a Trouble you're done for this round of Troubles. All successes = Heroes place first on the map next fight. One failure = normal placement. Two+ failures = the enemy gets an Ambush.",
+  },
+  {
+    name: "Contests of Skill",
+    text:
+      "Like Trouble, but against an opponent, with real stakes. Loss or Tie → fight it out (a loss also triggers an Ambush). A win lets you: get what you wanted, skip the next fight (only if you were trying to avoid it), or start the next fight with a Bonus / give the enemy a Penalty. Vs. Stooges: Skill = win, no Skill = tie. Vs. Warriors: compare Skills — matching or both-unskilled = tie. Vs. Bosses: only Teamwork can beat them; a Skilled Hero alone at best ties an unskilled Boss.",
+  },
+  {
+    name: "Teamwork",
+    text:
+      "Skilled Heroes/Warriors = 1 point each, Unskilled Bosses = 1, Skilled Bosses = 2, Stooges and unskilled Heroes/Warriors = 0. Compare totals: more points wins, equal points ties (and you fight). Every Skilled Hero beyond the first who joins in bumps the result up one degree (loss→tie→win).",
+  },
+];
 
 const BUILD_DATA = [
   {
@@ -356,6 +620,20 @@ const RULES_UPDATES = [
     title: "1v1 & Minimum Health Bars",
     text: "Minimum 2 Health Bars per side. 1v1 fights use 2 Health Bars per fighter; 2v2 needs no extra bars.",
   },
+  {
+    title: "The Turn — 8 Phases",
+    text:
+      "1) Stance Select — choose Stance, apply Comeback Rule if removed from play. 2) Start of Turn — resolve start-of-turn Abilities. 3) Heroic Spirit — if Taken Out, hand your roll to an ally. 4) Action Dice — roll your Stance's dice into your Action Pool. 5) Early Movement — everyone but the active character may Free Move. 6) Action & Reaction — active character acts; others get one Reactive Action after each Action. 7) Late Movement — everyone with Speed left may Free Move, active player first. 8) End Phase — End-of-turn Abilities, Traps deal damage, Burning/Challenge resolve, discard Speed, empty Action Pool.",
+  },
+  {
+    title: "Armor Rework",
+    text:
+      "Armor is now a once-per-turn automatic block, applying to the first damage you take each turn (any source, including Burning/Traps/Super Moves). Blocks 3. If you have Armor from multiple sources, it can trigger more than once per turn — the 2nd trigger blocks 2, the 3rd and beyond block 1. HP costs aren't damage, so Armor doesn't reduce them. Temporary Armor (from some Abilities) triggers once, after all other Armor, and doesn't stack with itself.",
+  },
+  {
+    title: "Maximum Action Pool",
+    text: "You can never hold more than 10 numbers in your Action Pool. Discard down to 10 if you'd exceed it.",
+  },
 ];
 
 const emptyChar = () => ({
@@ -389,6 +667,38 @@ const emptyChar = () => ({
   notes: "",
 });
 
+// Every Style in the book, flattened — enemies (Warriors, Stooges, and Bosses
+// outside their one required Stance) can use ANY Style, unrestricted by
+// Archetype, per the Enemy Building rules.
+const ALL_STYLES_FLAT = Object.values(STYLE_BY_NAME).sort((a, b) => a.name.localeCompare(b.name));
+
+const ENEMY_ARCHETYPE_OPTIONS = [
+  ...ARCHETYPE_NAMES.map((n) => ({ name: n, isBoss: false })),
+  ...BOSS_ARCHETYPES.map((b) => ({ name: b.name, isBoss: true })),
+];
+
+const emptyEnemy = () => ({
+  name: "",
+  type: "Warrior", // Warrior | Stooge | Boss
+  archetype: "Angel",
+  archetypeIsBoss: false,
+  stances: Array.from({ length: 3 }, () => ({ form: "Blaster Form", style: "" })),
+  build: "Bumbling Build",
+  customSkill: "",
+  level: 1,
+  healthBarsTotal: 1,
+  barsRemaining: 1,
+  cinematicWeight: "Middleweight",
+  hp: 16,
+  maxHp: 16,
+  tokens: TOKEN_TYPES.reduce((a, t) => ({ ...a, [t.key]: 0 }), {}),
+  notes: "",
+});
+
+function enemyStanceCount(type) {
+  return type === "Boss" ? 3 : 1;
+}
+
 /* ---------- palette ---------- */
 /* Palette pulled from the Vara Spiral polities:
    Federation teal  — idealistic, post-scarcity, the "default" register
@@ -409,27 +719,35 @@ const textMain = "#dbeeff";
 const headFont = "'Orbitron', 'Rajdhani', sans-serif";
 const monoFont = "'Share Tech Mono', 'JetBrains Mono', monospace";
 
-function Panel({ title, children, glow, right, tag }) {
+function Panel({ title, children, glow, right, tag, collapsible, defaultOpen = true }) {
+  const [open, setOpen] = useState(defaultOpen);
+  const isOpen = !collapsible || open;
+  const c = glow || cyan;
+
   return (
     <div
       style={{
         position: "relative",
         marginBottom: 22,
         background: `linear-gradient(180deg, ${bg2}, ${bg1})`,
-        border: `1px solid ${glow || cyan}33`,
+        border: `1px solid ${c}33`,
         borderRadius: 4,
-        padding: "16px 16px 14px",
-        boxShadow: `0 0 0 1px #ffffff08 inset, 0 0 24px -14px ${glow || cyan}`,
+        padding: isOpen ? "16px 16px 14px" : "16px 16px",
+        boxShadow: `0 0 0 1px #ffffff08 inset, 0 0 24px -14px ${c}`,
       }}
     >
-      <Corner glow={glow || cyan} pos="tl" />
-      <Corner glow={glow || cyan} pos="br" />
+      <Corner glow={c} pos="tl" />
+      <Corner glow={c} pos="br" />
       <div
+        role={collapsible ? "button" : undefined}
+        onClick={collapsible ? () => setOpen((o) => !o) : undefined}
         style={{
           display: "flex",
           alignItems: "flex-start",
           justifyContent: "space-between",
-          marginBottom: 14,
+          marginBottom: isOpen ? 14 : 0,
+          cursor: collapsible ? "pointer" : "default",
+          userSelect: collapsible ? "none" : "auto",
         }}
       >
         <div>
@@ -439,7 +757,7 @@ function Panel({ title, children, glow, right, tag }) {
               fontSize: 13,
               letterSpacing: 3,
               textTransform: "uppercase",
-              color: glow || cyan,
+              color: c,
               display: "flex",
               alignItems: "center",
               gap: 8,
@@ -463,9 +781,24 @@ function Panel({ title, children, glow, right, tag }) {
             </div>
           )}
         </div>
-        {right}
+        <div style={{ display: "flex", alignItems: "center", gap: 10 }}>
+          {right}
+          {collapsible && (
+            <span
+              style={{
+                color: c,
+                fontFamily: monoFont,
+                fontSize: 16,
+                transform: isOpen ? "rotate(180deg)" : "none",
+                transition: "transform .15s",
+              }}
+            >
+              ▾
+            </span>
+          )}
+        </div>
       </div>
-      {children}
+      {isOpen && children}
     </div>
   );
 }
@@ -691,6 +1024,12 @@ function App() {
   const [linkStatus, setLinkStatus] = useState("");
   const [linkBusy, setLinkBusy] = useState(false);
 
+  const [enemy, setEnemy] = useState(emptyEnemy());
+  const [enemyRoster, setEnemyRoster] = useState([]);
+  const [selectedEnemySave, setSelectedEnemySave] = useState("");
+  const [enemyLinkStatus, setEnemyLinkStatus] = useState("");
+  const [enemyLinkBusy, setEnemyLinkBusy] = useState(false);
+
   function slugify(str) {
     return (
       (str || "").trim().toLowerCase().replace(/[^a-z0-9]+/g, "-").replace(/(^-|-$)/g, "") ||
@@ -767,6 +1106,81 @@ function App() {
     setChar(emptyChar());
     setSelectedSave("");
     setLinkStatus("NEW RECORD STARTED");
+  }
+
+  function updateEnemy(patch) {
+    setEnemy((e) => ({ ...e, ...patch }));
+  }
+
+  async function refreshEnemyRoster() {
+    try {
+      const res = await appStorage.list("enemy:");
+      setEnemyRoster((res && res.keys) || []);
+    } catch (e) {
+      setEnemyRoster([]);
+    }
+  }
+
+  React.useEffect(() => {
+    refreshEnemyRoster();
+  }, []);
+
+  async function saveEnemy() {
+    setEnemyLinkBusy(true);
+    setEnemyLinkStatus("");
+    try {
+      const key = `enemy:${slugify(enemy.name || enemy.type)}`;
+      const result = await appStorage.set(key, JSON.stringify(enemy));
+      if (result) {
+        setEnemyLinkStatus(`SAVED — "${enemy.name || enemy.type}"`);
+        await refreshEnemyRoster();
+        setSelectedEnemySave(key);
+      } else {
+        setEnemyLinkStatus("SAVE FAILED — LINK ERROR");
+      }
+    } catch (e) {
+      setEnemyLinkStatus("SAVE FAILED — LINK ERROR");
+    }
+    setEnemyLinkBusy(false);
+  }
+
+  async function loadEnemy(key) {
+    if (!key) return;
+    setEnemyLinkBusy(true);
+    setEnemyLinkStatus("");
+    try {
+      const result = await appStorage.get(key);
+      if (result && result.value) {
+        const loaded = JSON.parse(result.value);
+        setEnemy({ ...emptyEnemy(), ...loaded });
+        setEnemyLinkStatus(`LOADED — "${loaded.name || loaded.type}"`);
+      } else {
+        setEnemyLinkStatus("NOT FOUND ON RECORD");
+      }
+    } catch (e) {
+      setEnemyLinkStatus("LOAD FAILED — LINK ERROR");
+    }
+    setEnemyLinkBusy(false);
+  }
+
+  async function deleteEnemy(key) {
+    if (!key) return;
+    setEnemyLinkBusy(true);
+    try {
+      await appStorage.delete(key);
+      setEnemyLinkStatus("RECORD PURGED");
+      setSelectedEnemySave("");
+      await refreshEnemyRoster();
+    } catch (e) {
+      setEnemyLinkStatus("DELETE FAILED — LINK ERROR");
+    }
+    setEnemyLinkBusy(false);
+  }
+
+  function newEnemy() {
+    setEnemy(emptyEnemy());
+    setSelectedEnemySave("");
+    setEnemyLinkStatus("NEW RECORD STARTED");
   }
 
   const archetypesAvailable = useMemo(
@@ -926,6 +1340,9 @@ function App() {
   const hpPct = char.maxHp > 0 ? char.hp / char.maxHp : 0;
   const hpColor = hpPct <= 0.25 ? danger : hpPct <= 0.5 ? amber : cyan;
 
+  const enemyHpPct = enemy.maxHp > 0 ? enemy.hp / enemy.maxHp : 0;
+  const enemyHpColor = enemyHpPct <= 0.25 ? danger : enemyHpPct <= 0.5 ? amber : cyan;
+
   return (
     <div
       style={{
@@ -1033,8 +1450,9 @@ function App() {
         {[
           ["build", "Build Hero"],
           ["combat", "Combat Tracker"],
-          ["reference", "Stance Reference"],
+          ["reference", "Field Manual"],
           ["export", "Export Sheet"],
+          ["gm", "GM Toolkit"],
         ].map(([key, label]) => (
           <button
             key={key}
@@ -1515,6 +1933,28 @@ function App() {
                 </span>
               }
             >
+              {(() => {
+                const activeForms = char.forms.slice(0, stanceCountForLevel(char.level));
+                const dupes = activeForms.filter((f, idx) => activeForms.indexOf(f) !== idx);
+                const uniqueDupes = [...new Set(dupes)];
+                if (uniqueDupes.length === 0) return null;
+                return (
+                  <div
+                    style={{
+                      background: `${danger}14`,
+                      border: `1px solid ${danger}55`,
+                      borderRadius: 3,
+                      padding: "8px 12px",
+                      marginBottom: 10,
+                      fontSize: 12,
+                      color: danger,
+                    }}
+                  >
+                    ⚠ Each Stance needs a different Form — you can't double up. Repeated:{" "}
+                    {uniqueDupes.join(", ")}
+                  </div>
+                );
+              })()}
               {Array.from({ length: stanceCountForLevel(char.level) }, (_, i) => i).map((i) => {
                 const form = formObjs[i];
                 const stance = char.stances[i];
@@ -1643,6 +2083,11 @@ function App() {
                 Leave a box blank to keep the Form's default Skill (shown as placeholder text). Type a
                 replacement to trade it — you may trade one Skill for any Skill of your choice during Hero
                 creation.
+              </div>
+              <div style={{ fontSize: 11, color: dim, lineHeight: 1.5, marginTop: 8, borderTop: "1px dashed #223546", paddingTop: 8 }}>
+                Skills come up during your Debut, to get past Trouble between fights, and in Contests
+                against enemies — if it applies, you're hyper-competent; if it doesn't, you fail, no matter how
+                simple the task.
               </div>
             </Panel>
           </>
@@ -1874,7 +2319,7 @@ function App() {
 
         {tab === "reference" && (
           <>
-            <Panel title="Token Glossary" glow={magenta} tag="OMEGA QUADRANT TRADE STANDARD — FULL INDEX">
+            <Panel title="Token Glossary" glow={magenta} tag="OMEGA QUADRANT TRADE STANDARD — FULL INDEX" collapsible defaultOpen={false}>
               {["Basic", "Common", "Rare"].map((cat) => (
                 <div key={cat} style={{ marginBottom: 14 }}>
                   <div
@@ -1928,7 +2373,7 @@ function App() {
               </div>
             </Panel>
 
-            <Panel title="Archetype Compendium" glow="#7dffa0" tag="TAGS · SUPER MOVES · FULL INDEX">
+            <Panel title="Archetype Compendium" glow="#7dffa0" tag="TAGS · SUPER MOVES · FULL INDEX" collapsible defaultOpen={false}>
               {ARCHETYPE_NAMES.map((a) => {
                 const arch = GAME_DATA.archetypes[a];
                 return (
@@ -1983,7 +2428,77 @@ function App() {
               })}
             </Panel>
 
-            <Panel title="Rules Updates" glow="#8fd6ff" tag="1E PATCH'D UP — QUICK REFERENCE">
+            <Panel title="Basic Actions" glow={cyan} tag="EVERY HERO HAS ACCESS — NO STANCE REQUIRED" collapsible defaultOpen={false}>
+              {BASIC_ACTIONS.map((a) => (
+                <div
+                  key={a.name}
+                  style={{
+                    background: "#0a121d",
+                    border: "1px solid #223546",
+                    borderLeft: `3px solid ${a.patched ? amber : cyan}`,
+                    borderRadius: 3,
+                    padding: "8px 12px",
+                    marginBottom: 6,
+                    fontSize: 12.5,
+                    lineHeight: 1.55,
+                  }}
+                >
+                  <b style={{ color: a.patched ? amber : cyan }}>
+                    {a.cost}: {a.name}
+                  </b>
+                  {a.patched && (
+                    <span style={{ fontSize: 9.5, color: amber, marginLeft: 6, letterSpacing: 1 }}>
+                      1E PATCH'D
+                    </span>
+                  )}
+                  <div style={{ color: "#c3dced" }}>{a.effect}</div>
+                </div>
+              ))}
+            </Panel>
+
+            <Panel title="Bonuses" glow="#7dffa0" tag="HIGHER STAKES · EYE OF THE STYLE · HEROIC POWER UP" collapsible defaultOpen={false}>
+              {BONUSES_DATA.map((b) => (
+                <div
+                  key={b.name}
+                  style={{
+                    background: "#0a121d",
+                    border: "1px solid #223546",
+                    borderLeft: "3px solid #7dffa0",
+                    borderRadius: 3,
+                    padding: "8px 12px",
+                    marginBottom: 6,
+                    fontSize: 12.5,
+                    lineHeight: 1.55,
+                  }}
+                >
+                  <b style={{ color: "#7dffa0" }}>{b.name}</b>
+                  <div style={{ color: "#c3dced" }}>{b.text}</div>
+                </div>
+              ))}
+            </Panel>
+
+            <Panel title="Penalties" glow={danger} tag="HIGHER STAKES — WHAT YOUR ENEMIES CAN GIVE YOU" collapsible defaultOpen={false}>
+              {PENALTIES_DATA.map((p) => (
+                <div
+                  key={p.name}
+                  style={{
+                    background: "#0a121d",
+                    border: "1px solid #223546",
+                    borderLeft: `3px solid ${danger}`,
+                    borderRadius: 3,
+                    padding: "8px 12px",
+                    marginBottom: 6,
+                    fontSize: 12.5,
+                    lineHeight: 1.55,
+                  }}
+                >
+                  <b style={{ color: danger }}>{p.name}</b>
+                  <div style={{ color: "#c3dced" }}>{p.text}</div>
+                </div>
+              ))}
+            </Panel>
+
+            <Panel title="Rules Updates" glow="#8fd6ff" tag="1E PATCH'D UP — QUICK REFERENCE" collapsible defaultOpen={false}>
               {RULES_UPDATES.map((r) => (
                 <div
                   key={r.title}
@@ -2007,7 +2522,7 @@ function App() {
               </div>
             </Panel>
 
-            <Panel title="All Forms &amp; Skills" glow={cyan} tag="FEDERATION OPEN ARCHIVE — PUBLIC ACCESS">
+            <Panel title="All Forms &amp; Skills" glow={cyan} tag="FEDERATION OPEN ARCHIVE — PUBLIC ACCESS" collapsible defaultOpen={false}>
               {GAME_DATA.forms.map((f) => (
                 <div
                   key={f.name}
@@ -2158,6 +2673,558 @@ function App() {
                 )}
               </Panel>
             </div>
+          </>
+        )}
+
+        {tab === "gm" && (
+          <>
+            <Panel title="Data Link" tag="ENEMY ROSTER — LOCAL TO THIS DEVICE" glow="#7dffa0">
+              <div style={{ display: "grid", gridTemplateColumns: "1fr auto", gap: 8, marginBottom: 10 }}>
+                <button
+                  disabled={enemyLinkBusy}
+                  onClick={saveEnemy}
+                  style={{ ...linkBtnStyle("#7dffa0"), opacity: enemyLinkBusy ? 0.5 : 1 }}
+                >
+                  ⬇ SAVE UNIT
+                </button>
+                <button disabled={enemyLinkBusy} onClick={newEnemy} style={linkBtnStyle(dim)}>
+                  + NEW
+                </button>
+              </div>
+              <Field label="Load / delete a saved unit">
+                <div style={{ display: "grid", gridTemplateColumns: "1fr auto auto", gap: 6 }}>
+                  <select
+                    style={selectStyle}
+                    value={selectedEnemySave}
+                    onChange={(e) => setSelectedEnemySave(e.target.value)}
+                  >
+                    <option value="">— select saved unit —</option>
+                    {enemyRoster.map((key) => (
+                      <option key={key} value={key}>
+                        {labelFromKey(key)}
+                      </option>
+                    ))}
+                  </select>
+                  <button
+                    disabled={enemyLinkBusy || !selectedEnemySave}
+                    onClick={() => loadEnemy(selectedEnemySave)}
+                    style={linkBtnStyle(cyan)}
+                  >
+                    LOAD
+                  </button>
+                  <button
+                    disabled={enemyLinkBusy || !selectedEnemySave}
+                    onClick={() => deleteEnemy(selectedEnemySave)}
+                    style={linkBtnStyle(danger)}
+                  >
+                    DEL
+                  </button>
+                </div>
+              </Field>
+              {enemyLinkStatus && (
+                <div style={{ fontFamily: monoFont, fontSize: 11, color: dim, letterSpacing: 1 }}>
+                  &gt; {enemyLinkStatus}
+                </div>
+              )}
+            </Panel>
+
+            <Panel title="Quick Enemy Builder" tag="WARRIOR · STOOGE · BOSS" glow={magenta}>
+              <div style={{ display: "grid", gridTemplateColumns: "2fr 1fr", gap: 12 }}>
+                <Field label="Name">
+                  <input
+                    style={inputStyle}
+                    value={enemy.name}
+                    onChange={(e) => updateEnemy({ name: e.target.value })}
+                    placeholder="e.g. Chrome Serpent"
+                  />
+                </Field>
+                <Field label="Level (informational)">
+                  <input
+                    type="number"
+                    min={1}
+                    max={10}
+                    style={inputStyle}
+                    value={enemy.level}
+                    onChange={(e) => updateEnemy({ level: Math.max(1, Math.min(10, parseInt(e.target.value) || 1)) })}
+                  />
+                </Field>
+              </div>
+
+              <Field label="Unit Type">
+                <TypeToggle
+                  options={["Warrior", "Stooge", "Boss"]}
+                  value={enemy.type}
+                  onChange={(v) =>
+                    updateEnemy({
+                      type: v,
+                      healthBarsTotal: v === "Boss" ? 2 : 1,
+                      barsRemaining: v === "Boss" ? 2 : 1,
+                    })
+                  }
+                />
+                <div style={{ fontSize: 11, color: dim, marginTop: 6, lineHeight: 1.5 }}>
+                  {ENEMY_TYPE_INFO[enemy.type].summary}
+                </div>
+              </Field>
+
+              {enemy.type !== "Stooge" && (
+                <Field label="Archetype (Fused Ability, or a Boss Archetype)">
+                  <select
+                    style={selectStyle}
+                    value={enemy.archetype}
+                    onChange={(e) => {
+                      const opt = ENEMY_ARCHETYPE_OPTIONS.find((o) => o.name === e.target.value);
+                      updateEnemy({ archetype: e.target.value, archetypeIsBoss: !!opt?.isBoss });
+                    }}
+                  >
+                    <optgroup label="Hero Archetypes (Fused Ability)">
+                      {ARCHETYPE_NAMES.map((n) => (
+                        <option key={n} value={n}>
+                          {n}
+                        </option>
+                      ))}
+                    </optgroup>
+                    <optgroup label="Boss Archetypes">
+                      {BOSS_ARCHETYPES.map((b) => (
+                        <option key={b.name} value={b.name}>
+                          {b.name}
+                        </option>
+                      ))}
+                    </optgroup>
+                  </select>
+                </Field>
+              )}
+
+              {enemy.type !== "Stooge" &&
+                (enemy.archetypeIsBoss ? (
+                  <div
+                    style={{
+                      background: "#0a121d",
+                      border: "1px solid #2c3f52",
+                      borderLeft: `3px solid ${magenta}`,
+                      borderRadius: 3,
+                      padding: "8px 12px",
+                      marginBottom: 12,
+                      fontSize: 12.5,
+                      lineHeight: 1.55,
+                    }}
+                  >
+                    <b style={{ color: magenta }}>{enemy.archetype}</b>
+                    <div style={{ color: "#c3dced" }}>
+                      {BOSS_ARCHETYPES.find((b) => b.name === enemy.archetype)?.ability}
+                    </div>
+                    <div style={{ color: dim, fontSize: 11, marginTop: 4 }}>
+                      Required Style (in at least one Stance):{" "}
+                      {BOSS_ARCHETYPES.find((b) => b.name === enemy.archetype)?.styles.join(", ")}
+                    </div>
+                  </div>
+                ) : (
+                  <div
+                    style={{
+                      background: "#0a121d",
+                      border: "1px solid #2c3f52",
+                      borderLeft: `3px solid ${magenta}`,
+                      borderRadius: 3,
+                      padding: "8px 12px",
+                      marginBottom: 12,
+                      fontSize: 12.5,
+                      lineHeight: 1.55,
+                    }}
+                  >
+                    <b style={{ color: magenta }}>FUSED {enemy.archetype}</b>
+                    <div style={{ color: "#c3dced" }}>{GAME_DATA.archetypes[enemy.archetype]?.fused}</div>
+                  </div>
+                ))}
+
+              {enemy.type === "Stooge" && (
+                <Field label="Build">
+                  <select style={selectStyle} value={enemy.build} onChange={(e) => updateEnemy({ build: e.target.value })}>
+                    {BUILD_DATA.filter((b) => !b.name.includes("Bulky") || true).map((b) => (
+                      <option key={b.name} value={b.name}>
+                        {b.name}
+                      </option>
+                    ))}
+                  </select>
+                </Field>
+              )}
+
+              {enemy.type === "Stooge" && (
+                <Field label="Health Bars (2 = Super Stooge, gains a Fused Archetype Ability)">
+                  <TypeToggle
+                    options={["1", "2"]}
+                    value={String(enemy.healthBarsTotal)}
+                    onChange={(v) => updateEnemy({ healthBarsTotal: parseInt(v), barsRemaining: parseInt(v) })}
+                  />
+                </Field>
+              )}
+              {enemy.type === "Stooge" && enemy.healthBarsTotal === 2 && (
+                <Field label="Super Stooge Archetype (Fused Ability)">
+                  <select
+                    style={selectStyle}
+                    value={enemy.archetype}
+                    onChange={(e) => updateEnemy({ archetype: e.target.value, archetypeIsBoss: false })}
+                  >
+                    {ARCHETYPE_NAMES.map((n) => (
+                      <option key={n} value={n}>
+                        {n}
+                      </option>
+                    ))}
+                  </select>
+                  <div style={{ fontSize: 11.5, color: "#c3dced", marginTop: 6 }}>
+                    {GAME_DATA.archetypes[enemy.archetype]?.fused}
+                  </div>
+                </Field>
+              )}
+
+              {enemy.type === "Boss" && (
+                <Field label="Health Bars (2-5 — sets Units and Turns per Round)">
+                  <input
+                    type="number"
+                    min={2}
+                    max={5}
+                    style={{ ...inputStyle, width: 100 }}
+                    value={enemy.healthBarsTotal}
+                    onChange={(e) => {
+                      const v = Math.max(2, Math.min(5, parseInt(e.target.value) || 2));
+                      updateEnemy({ healthBarsTotal: v, barsRemaining: v });
+                    }}
+                  />
+                  <div style={{ fontSize: 11, color: dim, marginTop: 4 }}>
+                    {enemy.healthBarsTotal} Units · {enemy.healthBarsTotal} turns per Round
+                  </div>
+                </Field>
+              )}
+
+              <div style={{ fontFamily: headFont, fontSize: 12, letterSpacing: 1.5, color: amber, margin: "12px 0 8px" }}>
+                STANCE{enemyStanceCount(enemy.type) > 1 ? "S" : ""}
+              </div>
+              {Array.from({ length: enemyStanceCount(enemy.type) }, (_, i) => i).map((i) => {
+                const stance = enemy.stances[i];
+                const styleObj = STYLE_BY_NAME[stance.style];
+                const formObj = GAME_DATA.forms.find((f) => f.name === stance.form);
+                return (
+                  <div
+                    key={i}
+                    style={{
+                      border: "1px solid #223546",
+                      borderRadius: 4,
+                      padding: 10,
+                      marginBottom: 10,
+                      background: "#0a121d",
+                    }}
+                  >
+                    <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr", gap: 8, marginBottom: 6 }}>
+                      <Field label="Form">
+                        <select
+                          style={selectStyle}
+                          value={stance.form}
+                          onChange={(e) => {
+                            const stances = enemy.stances.map((s, idx) =>
+                              idx === i ? { ...s, form: e.target.value } : s
+                            );
+                            updateEnemy({ stances });
+                          }}
+                        >
+                          {GAME_DATA.forms.map((f) => (
+                            <option key={f.name} value={f.name}>
+                              {f.name}
+                            </option>
+                          ))}
+                        </select>
+                      </Field>
+                      <Field label="Style (any)">
+                        <select
+                          style={selectStyle}
+                          value={stance.style}
+                          onChange={(e) => {
+                            const stances = enemy.stances.map((s, idx) =>
+                              idx === i ? { ...s, style: e.target.value } : s
+                            );
+                            updateEnemy({ stances });
+                          }}
+                        >
+                          <option value="">— choose —</option>
+                          {ALL_STYLES_FLAT.map((s) => (
+                            <option key={s.name} value={s.name}>
+                              {s.name}
+                            </option>
+                          ))}
+                        </select>
+                      </Field>
+                    </div>
+                    {formObj && (
+                      <div style={{ fontSize: 11.5, color: dim, lineHeight: 1.5 }}>
+                        <span style={{ color: cyan }}>{formObj.name}</span>: {formObj.ability}
+                      </div>
+                    )}
+                    {styleObj && (
+                      <div style={{ fontSize: 11.5, color: dim, lineHeight: 1.5, marginTop: 3 }}>
+                        <span style={{ color: magenta }}>
+                          {styleObj.name} (Range {styleObj.range})
+                        </span>
+                        : {styleObj.ability}
+                      </div>
+                    )}
+                  </div>
+                );
+              })}
+
+              {enemy.type === "Boss" && (
+                <Field label="4th Skill (custom, e.g. 'Ruthless Socialite')">
+                  <input
+                    style={inputStyle}
+                    value={enemy.customSkill}
+                    onChange={(e) => updateEnemy({ customSkill: e.target.value })}
+                    placeholder="Two-word profession & attitude"
+                  />
+                </Field>
+              )}
+
+              {enemy.type !== "Stooge" && (
+                <div style={{ fontSize: 11, color: dim, lineHeight: 1.5, marginTop: 6 }}>
+                  Skills: {Array.from({ length: enemyStanceCount(enemy.type) }, (_, i) => i)
+                    .map((i) => GAME_DATA.forms.find((f) => f.name === enemy.stances[i]?.form)?.skill.split(" — ")[0])
+                    .filter(Boolean)
+                    .join(", ")}
+                  {enemy.type === "Boss" && enemy.customSkill ? `, ${enemy.customSkill}` : ""}
+                </div>
+              )}
+            </Panel>
+
+            <Panel title="Unit Tracker" tag="LIVE COMBAT READOUT" glow={enemyHpColor}>
+              <Field label="Cinematic Weight">
+                <select
+                  style={selectStyle}
+                  value={enemy.cinematicWeight}
+                  onChange={(e) => {
+                    const w = CINEMATIC_WEIGHTS.find((x) => x.name === e.target.value);
+                    updateEnemy({ cinematicWeight: e.target.value, maxHp: w.hp, hp: w.hp });
+                  }}
+                >
+                  {CINEMATIC_WEIGHTS.map((w) => (
+                    <option key={w.name} value={w.name}>
+                      {w.name} — {w.hp} HP
+                    </option>
+                  ))}
+                </select>
+              </Field>
+
+              <div style={{ display: "flex", alignItems: "center", gap: 10, marginBottom: 10 }}>
+                <button className="tok-btn" onClick={() => updateEnemy({ hp: Math.max(0, enemy.hp - 1) })} style={hpBtnStyle(enemyHpColor)}>
+                  −
+                </button>
+                <div style={{ flex: 1 }}>
+                  <div style={{ display: "flex", gap: 3, height: 22 }}>
+                    {Array.from({ length: enemy.maxHp }).map((_, idx) => (
+                      <div
+                        key={idx}
+                        style={{
+                          flex: 1,
+                          background: idx < enemy.hp ? enemyHpColor : "#111c29",
+                          border: `1px solid ${idx < enemy.hp ? enemyHpColor : "#22364a"}`,
+                        }}
+                      />
+                    ))}
+                  </div>
+                  <div style={{ textAlign: "center", fontFamily: headFont, fontWeight: 700, marginTop: 6, color: enemyHpColor }}>
+                    {enemy.hp} / {enemy.maxHp} HP — BAR {enemy.healthBarsTotal - enemy.barsRemaining + 1} OF {enemy.healthBarsTotal}
+                  </div>
+                </div>
+                <button
+                  className="tok-btn"
+                  onClick={() => updateEnemy({ hp: Math.min(enemy.maxHp, enemy.hp + 1) })}
+                  style={hpBtnStyle(enemyHpColor)}
+                >
+                  +
+                </button>
+              </div>
+
+              <button
+                onClick={() => {
+                  if (enemy.barsRemaining > 1) {
+                    updateEnemy({ barsRemaining: enemy.barsRemaining - 1, hp: enemy.maxHp });
+                  }
+                }}
+                disabled={enemy.barsRemaining <= 1}
+                style={{ ...linkBtnStyle(danger), width: "100%", marginBottom: 10, opacity: enemy.barsRemaining <= 1 ? 0.4 : 1 }}
+              >
+                HEALTH BAR BROKEN → NEXT BAR
+              </button>
+
+              <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr", gap: 10 }}>
+                {TOKEN_TYPES.map((t) => (
+                  <div
+                    key={t.key}
+                    style={{
+                      display: "flex",
+                      alignItems: "center",
+                      justifyContent: "space-between",
+                      background: "#0a121d",
+                      border: "1px solid #223546",
+                      borderLeft: `3px solid ${t.color}`,
+                      borderRadius: 3,
+                      padding: "8px 10px",
+                    }}
+                  >
+                    <span style={{ fontFamily: headFont, fontSize: 12, letterSpacing: 1, color: t.color }}>
+                      {t.key.toUpperCase()}
+                    </span>
+                    <div style={{ display: "flex", alignItems: "center", gap: 8 }}>
+                      <button
+                        className="tok-btn"
+                        onClick={() =>
+                          updateEnemy({ tokens: { ...enemy.tokens, [t.key]: Math.max(0, (enemy.tokens[t.key] || 0) - 1) } })
+                        }
+                        style={tokBtnStyle}
+                      >
+                        −
+                      </button>
+                      <span style={{ minWidth: 18, textAlign: "center", fontFamily: monoFont, fontWeight: 700 }}>
+                        {enemy.tokens[t.key] || 0}
+                      </span>
+                      <button
+                        className="tok-btn"
+                        onClick={() => updateEnemy({ tokens: { ...enemy.tokens, [t.key]: (enemy.tokens[t.key] || 0) + 1 } })}
+                        style={tokBtnStyle}
+                      >
+                        +
+                      </button>
+                    </div>
+                  </div>
+                ))}
+              </div>
+
+              <Field label="Notes">
+                <textarea
+                  style={{ ...textAreaStyle, marginTop: 10 }}
+                  value={enemy.notes}
+                  onChange={(e) => updateEnemy({ notes: e.target.value })}
+                  placeholder="Tactics, dialogue cues, whatever helps at the table..."
+                />
+              </Field>
+            </Panel>
+
+            <Panel title="Enemy Creation Checklist" glow="#8fd6ff" tag="WARRIORS · STOOGES · BOSSES" collapsible defaultOpen={false}>
+              {Object.entries(ENEMY_TYPE_INFO).map(([type, info]) => (
+                <div key={type} style={{ marginBottom: 14 }}>
+                  <div style={{ fontFamily: headFont, fontSize: 13, color: "#8fd6ff", letterSpacing: 1, marginBottom: 4 }}>
+                    {type.toUpperCase()}
+                  </div>
+                  <div style={{ fontSize: 12, color: dim, marginBottom: 6 }}>{info.summary}</div>
+                  {info.checklist.map((step, idx) => (
+                    <div key={idx} style={{ fontSize: 12, color: "#c3dced", marginBottom: 3, paddingLeft: 12 }}>
+                      {idx + 1}. {step}
+                    </div>
+                  ))}
+                </div>
+              ))}
+            </Panel>
+
+            <Panel title="Boss Archetypes" glow={magenta} tag="BOSS / WARRIOR EXCLUSIVE — FULL INDEX" collapsible defaultOpen={false}>
+              {BOSS_ARCHETYPES.map((b) => (
+                <div
+                  key={b.name}
+                  style={{
+                    background: "#0a121d",
+                    border: "1px solid #223546",
+                    borderLeft: `3px solid ${magenta}`,
+                    borderRadius: 3,
+                    padding: "8px 12px",
+                    marginBottom: 6,
+                    fontSize: 12.5,
+                    lineHeight: 1.55,
+                  }}
+                >
+                  <b style={{ color: magenta }}>{b.name}</b>
+                  <div style={{ color: "#c3dced" }}>{b.ability}</div>
+                  <div style={{ color: dim, fontStyle: "italic", marginTop: 2 }}>{b.flavor}</div>
+                  <div style={{ color: dim, fontSize: 11, marginTop: 4 }}>Requires: {b.styles.join(", ")}</div>
+                </div>
+              ))}
+            </Panel>
+
+            <Panel title="Enemy Advancement" glow="#7dffa0" tag="1E PATCH'D UP — ENEMIES LEVEL WITH THE PARTY" collapsible defaultOpen={false}>
+              <div style={{ fontSize: 11.5, color: dim, marginBottom: 8 }}>
+                Enemies are always the same level as the Heroes. Stooges barely improve, gaining only a Fused
+                or Villain Ability at level 6. Warriors add a Bonus Die like Heroes but never reach d12.
+              </div>
+              <div style={{ display: "grid", gridTemplateColumns: "0.6fr 1fr 1fr 2fr", gap: 4, fontSize: 11.5 }}>
+                <div style={{ color: dim, fontFamily: headFont }}>LVL</div>
+                <div style={{ color: dim, fontFamily: headFont }}>BOSS DIE</div>
+                <div style={{ color: dim, fontFamily: headFont }}>WARRIOR DIE</div>
+                <div style={{ color: dim, fontFamily: headFont }}>BENEFIT</div>
+                {ENEMY_ADVANCEMENT_TABLE.map((r) => (
+                  <React.Fragment key={r.level}>
+                    <div style={{ color: "#7dffa0" }}>{r.level}</div>
+                    <div style={{ color: "#c3dced" }}>{r.bossDie}</div>
+                    <div style={{ color: "#c3dced" }}>{r.warriorDie}</div>
+                    <div style={{ color: "#c3dced" }}>{r.benefit}</div>
+                  </React.Fragment>
+                ))}
+              </div>
+            </Panel>
+
+            <Panel title="Encounter Design" glow={amber} tag="UNITS · CINEMATIC WEIGHT" collapsible defaultOpen={false}>
+              <div style={{ fontSize: 12.5, color: "#c3dced", lineHeight: 1.6, marginBottom: 10 }}>
+                Match Units to Heroes 1-for-1 for a fair fight. A Warrior is 1 Unit. A Stooge group is 1 Unit
+                (2 if it's a Super Stooge). A Boss is worth as many Units as it has Health Bars (2-5). Use the
+                Uneven Fights complication to push past even odds on purpose.
+              </div>
+              <div style={{ fontSize: 11.5, color: dim, marginBottom: 4 }}>
+                Cinematic Weight sets HP per Health Bar and Heal Value — see the Combat Tracker's selector for
+                current (1E Patch'd Up) values:
+              </div>
+              <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr 1fr", gap: 6, fontSize: 11.5 }}>
+                {CINEMATIC_WEIGHTS.map((w) => (
+                  <div key={w.name} style={{ background: "#0a121d", border: "1px solid #223546", borderRadius: 3, padding: "6px 8px" }}>
+                    <div style={{ color: amber, fontFamily: headFont }}>{w.name}</div>
+                    <div style={{ color: "#c3dced" }}>{w.hp} HP · Heal {w.heal}</div>
+                  </div>
+                ))}
+              </div>
+            </Panel>
+
+            <Panel title="Complications" glow={danger} tag="DIRECTOR TOOLS — MIX UP A FIGHT" collapsible defaultOpen={false}>
+              {COMPLICATIONS_DATA.map((c) => (
+                <div
+                  key={c.name}
+                  style={{
+                    background: "#0a121d",
+                    border: "1px solid #223546",
+                    borderLeft: `3px solid ${danger}`,
+                    borderRadius: 3,
+                    padding: "8px 12px",
+                    marginBottom: 6,
+                    fontSize: 12.5,
+                    lineHeight: 1.55,
+                  }}
+                >
+                  <b style={{ color: danger }}>{c.name}</b>
+                  <div style={{ color: "#c3dced" }}>{c.text}</div>
+                </div>
+              ))}
+            </Panel>
+
+            <Panel title="Between Fights" glow={cyan} tag="DEBUT · TROUBLE · CONTESTS · TEAMWORK" collapsible defaultOpen={false}>
+              {BETWEEN_FIGHT_DATA.map((b) => (
+                <div
+                  key={b.name}
+                  style={{
+                    background: "#0a121d",
+                    border: "1px solid #223546",
+                    borderLeft: `3px solid ${cyan}`,
+                    borderRadius: 3,
+                    padding: "8px 12px",
+                    marginBottom: 6,
+                    fontSize: 12.5,
+                    lineHeight: 1.55,
+                  }}
+                >
+                  <b style={{ color: cyan }}>{b.name}</b>
+                  <div style={{ color: "#c3dced" }}>{b.text}</div>
+                </div>
+              ))}
+            </Panel>
           </>
         )}
 
