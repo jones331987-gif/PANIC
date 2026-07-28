@@ -641,7 +641,15 @@ const RULES_UPDATES = [
   },
 ];
 
+// Bump these when emptyChar()/emptyEnemy() shape changes in a way that a
+// simple {...defaults, ...loaded} merge can't safely handle (field renames,
+// restructures) — lets loadHero/loadEnemy detect and warn instead of silently
+// producing a half-broken record.
+const CHAR_SCHEMA_VERSION = 1;
+const ENEMY_SCHEMA_VERSION = 1;
+
 const emptyChar = () => ({
+  schemaVersion: CHAR_SCHEMA_VERSION,
   name: "",
   player: "",
   heroType: "Focused",
@@ -683,6 +691,7 @@ const ENEMY_ARCHETYPE_OPTIONS = [
 ];
 
 const emptyEnemy = () => ({
+  schemaVersion: ENEMY_SCHEMA_VERSION,
   name: "",
   type: "Warrior", // Warrior | Stooge | Boss
   archetype: "Angel",
@@ -948,6 +957,91 @@ function TypeToggle({ options, value, onChange }) {
 }
 
 /* ---------- collapsible stance readout used in Combat tab ---------- */
+/* ---------- shared content renderers ----------
+   These render just the inner content (name/ability/actions) for a Form,
+   Style, or Archetype ability entry — no outer wrapper/border, so each call
+   site keeps its own surrounding chrome. Pulling this out once means a data
+   or color-coding fix here fixes it everywhere at once, instead of needing
+   the same edit repeated across StanceCard, the Build tab, the Export Sheet,
+   and the GM Toolkit enemy builder. */
+function Toast({ message }) {
+  if (!message) return null;
+  const isError = /FAILED|ERROR|NOT FOUND/.test(message);
+  const tone = isError ? danger : actionGreen;
+  return (
+    <div
+      style={{
+        position: "fixed",
+        bottom: 20,
+        left: "50%",
+        transform: "translateX(-50%)",
+        zIndex: 1000,
+        background: "#150f1a",
+        border: `2px solid ${tone}`,
+        borderRadius: 3,
+        padding: "10px 18px",
+        boxShadow: `0 4px 24px -6px ${tone}88`,
+        fontFamily: monoFont,
+        fontSize: 12.5,
+        color: textMain,
+        maxWidth: "90vw",
+        letterSpacing: 0.5,
+        pointerEvents: "none",
+      }}
+    >
+      <span style={{ color: tone, fontWeight: 700 }}>{isError ? "⚠ " : "✓ "}</span>
+      {message}
+    </div>
+  );
+}
+
+function FormDetail({ form }) {
+  return (
+    <>
+      <b style={{ color: formBlue }}>{form.name}</b> <span style={{ color: dim }}>({form.alts})</span>
+      <div style={{ margin: "3px 0" }}>{form.ability}</div>
+      {form.actions.map((a) => (
+        <div key={a.name} style={{ margin: "2px 0" }}>
+          <b style={{ color: actionGreen }}>
+            {a.cost}: {a.name}
+          </b>{" "}
+          — {a.effect}
+        </div>
+      ))}
+    </>
+  );
+}
+
+function StyleDetail({ style }) {
+  return (
+    <>
+      <b style={{ color: styleRed }}>
+        {style.name} <span style={{ fontWeight: 400 }}>(Range: {style.range})</span>
+      </b>
+      <div style={{ margin: "3px 0" }}>{style.ability}</div>
+      {(style.actions || []).map((a) => (
+        <div key={a.name} style={{ margin: "2px 0" }}>
+          <b style={{ color: actionGreen }}>
+            {a.cost}: {a.name}
+          </b>{" "}
+          — {a.effect}
+        </div>
+      ))}
+    </>
+  );
+}
+
+function ArchetypeAbilityDetail({ entry }) {
+  return (
+    <>
+      <b style={{ color: magenta }}>
+        {entryLabel(entry)} {entry.name.toUpperCase()}
+      </b>
+      <div>{GAME_DATA.archetypes[entry.name][entry.tier]}</div>
+    </>
+  );
+}
+
 function StanceCard({ i, form, style, archetype, archetypeAbilities, expanded, onToggle }) {
   const stanceLabel = style
     ? `${style.name.replace(" Style", "")} ${form.name.replace(" Form", "")}`
@@ -1050,20 +1144,167 @@ function StanceCard({ i, form, style, archetype, archetypeAbilities, expanded, o
   );
 }
 
+class ErrorBoundary extends React.Component {
+  constructor(props) {
+    super(props);
+    this.state = { error: null };
+  }
+  static getDerivedStateFromError(error) {
+    return { error };
+  }
+  componentDidCatch(error, info) {
+    console.error("Panic at the Dojo crashed:", error, info);
+  }
+  render() {
+    if (this.state.error) {
+      return (
+        <div
+          style={{
+            minHeight: "100vh",
+            background: "#08070a",
+            color: "#f2ecf5",
+            fontFamily: "'Share Tech Mono', monospace",
+            display: "flex",
+            alignItems: "center",
+            justifyContent: "center",
+            padding: 24,
+          }}
+        >
+          <div
+            style={{
+              maxWidth: 480,
+              border: "2px solid #ff4d5e",
+              borderRadius: 4,
+              padding: 24,
+              background: "#191320",
+              textAlign: "center",
+            }}
+          >
+            <div style={{ fontFamily: "'Bebas Neue', sans-serif", fontSize: 22, color: "#ff4d5e", letterSpacing: 1, marginBottom: 10 }}>
+              SOMETHING BROKE
+            </div>
+            <div style={{ fontSize: 13, color: "#cdbfd6", lineHeight: 1.6, marginBottom: 16 }}>
+              The tool hit an unexpected error and can't keep going in this state. Your saved heroes and
+              enemies are untouched — try starting a fresh sheet, or reload the page.
+            </div>
+            <div style={{ fontSize: 11, color: "#8a7f8f", marginBottom: 16, fontFamily: "monospace", wordBreak: "break-word" }}>
+              {String(this.state.error && this.state.error.message ? this.state.error.message : this.state.error)}
+            </div>
+            <button
+              onClick={() => this.setState({ error: null })}
+              style={{
+                fontFamily: "'Bebas Neue', sans-serif",
+                letterSpacing: 1,
+                fontSize: 14,
+                padding: "10px 20px",
+                border: "2px solid #ff4d5e",
+                background: "#ff4d5e22",
+                color: "#f2ecf5",
+                cursor: "pointer",
+                borderRadius: 3,
+              }}
+            >
+              TRY TO RECOVER
+            </button>
+          </div>
+        </div>
+      );
+    }
+    return this.props.children;
+  }
+}
+
 function App() {
   const [char, setChar] = useState(emptyChar());
   const [tab, setTab] = useState("build");
+  const [uiRestored, setUiRestored] = useState(false);
+  const [gmHintDismissed, setGmHintDismissed] = useState(false);
   const [expanded, setExpanded] = useState({ 0: true, 1: false, 2: false });
   const [savedRoster, setSavedRoster] = useState([]);
   const [selectedSave, setSelectedSave] = useState("");
+  const [confirmDeleteHero, setConfirmDeleteHero] = useState(false);
   const [linkStatus, setLinkStatus] = useState("");
   const [linkBusy, setLinkBusy] = useState(false);
 
   const [enemy, setEnemy] = useState(emptyEnemy());
   const [enemyRoster, setEnemyRoster] = useState([]);
   const [selectedEnemySave, setSelectedEnemySave] = useState("");
+  const [confirmDeleteEnemy, setConfirmDeleteEnemy] = useState(false);
   const [enemyLinkStatus, setEnemyLinkStatus] = useState("");
   const [enemyLinkBusy, setEnemyLinkBusy] = useState(false);
+
+  const TAB_KEYS = ["build", "combat", "reference", "export", "gm"];
+
+  // Restore the last tab you had open, once, on first mount.
+  useEffect(() => {
+    (async () => {
+      try {
+        const res = await appStorage.get("ui:lastTab");
+        if (res && res.value && TAB_KEYS.includes(res.value)) {
+          setTab(res.value);
+        }
+      } catch (e) {
+        // no stored preference yet — fine, stay on the default tab
+      }
+      setUiRestored(true);
+    })();
+  }, []);
+
+  // Persist tab changes, but only after the initial restore above has run —
+  // otherwise the default "build" would overwrite a real stored preference
+  // during the brief window before restore completes.
+  useEffect(() => {
+    if (!uiRestored) return;
+    appStorage.set("ui:lastTab", tab).catch(() => {});
+  }, [tab, uiRestored]);
+
+  useEffect(() => {
+    (async () => {
+      try {
+        const res = await appStorage.get("ui:gmHintDismissed");
+        if (res && res.value === "1") setGmHintDismissed(true);
+      } catch (e) {
+        // never dismissed yet — show the hint
+      }
+    })();
+  }, []);
+
+  function dismissGmHint() {
+    setGmHintDismissed(true);
+    appStorage.set("ui:gmHintDismissed", "1").catch(() => {});
+  }
+
+  useEffect(() => {
+    if (!confirmDeleteHero) return;
+    const t = setTimeout(() => setConfirmDeleteHero(false), 3000);
+    return () => clearTimeout(t);
+  }, [confirmDeleteHero]);
+
+  useEffect(() => {
+    if (!confirmDeleteEnemy) return;
+    const t = setTimeout(() => setConfirmDeleteEnemy(false), 3000);
+    return () => clearTimeout(t);
+  }, [confirmDeleteEnemy]);
+
+  useEffect(() => {
+    if (!linkStatus) return;
+    const t = setTimeout(() => setLinkStatus(""), 3500);
+    return () => clearTimeout(t);
+  }, [linkStatus]);
+
+  useEffect(() => {
+    if (!enemyLinkStatus) return;
+    const t = setTimeout(() => setEnemyLinkStatus(""), 3500);
+    return () => clearTimeout(t);
+  }, [enemyLinkStatus]);
+
+  const [fieldManualSearch, setFieldManualSearch] = useState("");
+
+  function fmMatch(...fields) {
+    const q = fieldManualSearch.trim().toLowerCase();
+    if (!q) return true;
+    return fields.some((f) => (f || "").toLowerCase().includes(q));
+  }
 
   function slugify(str) {
     return (
@@ -1113,7 +1354,11 @@ function App() {
       if (result && result.value) {
         const loaded = JSON.parse(result.value);
         setChar({ ...emptyChar(), ...loaded });
-        setLinkStatus(`LOADED — "${loaded.name || "Unnamed Hero"}"`);
+        const versionNote =
+          loaded.schemaVersion && loaded.schemaVersion !== CHAR_SCHEMA_VERSION
+            ? " (older format — double-check fields)"
+            : "";
+        setLinkStatus(`LOADED — "${loaded.name || "Unnamed Hero"}"${versionNote}`);
       } else {
         setLinkStatus("NOT FOUND ON RECORD");
       }
@@ -1188,7 +1433,11 @@ function App() {
       if (result && result.value) {
         const loaded = JSON.parse(result.value);
         setEnemy({ ...emptyEnemy(), ...loaded });
-        setEnemyLinkStatus(`LOADED — "${loaded.name || loaded.type}"`);
+        const versionNote =
+          loaded.schemaVersion && loaded.schemaVersion !== ENEMY_SCHEMA_VERSION
+            ? " (older format — double-check fields)"
+            : "";
+        setEnemyLinkStatus(`LOADED — "${loaded.name || loaded.type}"${versionNote}`);
       } else {
         setEnemyLinkStatus("NOT FOUND ON RECORD");
       }
@@ -1402,6 +1651,12 @@ function App() {
         .tok-btn { transition: transform .1s; cursor: pointer; }
         .tok-btn:active { transform: scale(0.88); }
         body { background: ${bg0}; }
+        @media (min-width: 900px) {
+          .app-wide { max-width: 880px !important; }
+        }
+        @media (min-width: 1300px) {
+          .app-wide { max-width: 1100px !important; }
+        }
         @media print {
           body * { visibility: hidden; }
           #export-sheet, #export-sheet * { visibility: visible; }
@@ -1483,6 +1738,7 @@ function App() {
 
       {/* Tabs */}
       <div
+        className="app-wide"
         style={{
           display: "flex",
           flexWrap: "wrap",
@@ -1524,7 +1780,7 @@ function App() {
         ))}
       </div>
 
-      <div style={{ maxWidth: 640, margin: "22px auto 0", padding: "0 16px" }}>
+      <div className="app-wide" style={{ maxWidth: 640, margin: "22px auto 0", padding: "0 16px" }}>
         {tab === "build" && (
           <>
             <Panel title="Data Link" tag="PERSONAL STORAGE — LOCAL TO THIS DEVICE" glow={actionGreen}>
@@ -1548,7 +1804,10 @@ function App() {
                   <select
                     style={selectStyle}
                     value={selectedSave}
-                    onChange={(e) => setSelectedSave(e.target.value)}
+                    onChange={(e) => {
+                      setSelectedSave(e.target.value);
+                      setConfirmDeleteHero(false);
+                    }}
                   >
                     <option value="">— select saved hero —</option>
                     {savedRoster.map((key) => (
@@ -1566,18 +1825,23 @@ function App() {
                   </button>
                   <button
                     disabled={linkBusy || !selectedSave}
-                    onClick={() => deleteHero(selectedSave)}
-                    style={linkBtnStyle(danger)}
+                    onClick={() => {
+                      if (confirmDeleteHero) {
+                        deleteHero(selectedSave);
+                        setConfirmDeleteHero(false);
+                      } else {
+                        setConfirmDeleteHero(true);
+                      }
+                    }}
+                    style={{
+                      ...linkBtnStyle(danger),
+                      ...(confirmDeleteHero ? { background: danger, color: "#1a0708" } : {}),
+                    }}
                   >
-                    DEL
+                    {confirmDeleteHero ? "SURE?" : "DEL"}
                   </button>
                 </div>
               </Field>
-              {linkStatus && (
-                <div style={{ fontFamily: monoFont, fontSize: 11, color: dim, letterSpacing: 1 }}>
-                  &gt; {linkStatus}
-                </div>
-              )}
             </Panel>
 
             <Panel title="Hero Identity" tag="FEDERATION CIVIL REGISTRY — LAMBDA QUADRANT">
@@ -2001,6 +2265,34 @@ function App() {
                   </div>
                 );
               })()}
+              {(() => {
+                if (char.heroType !== "Frantic") return null;
+                // Frantic Heroes' initial Stances must each pull from a different Archetype —
+                // check the first N stances, where N = however many Archetypes they have.
+                const checkCount = Math.min(archetypesAvailable.length, stanceCountForLevel(char.level));
+                const usedArchetypes = char.stances
+                  .slice(0, checkCount)
+                  .map((s) => resolveStanceArchetype(archetypesAvailable, s.archetype));
+                const dupes = usedArchetypes.filter((a, idx) => usedArchetypes.indexOf(a) !== idx);
+                const uniqueDupes = [...new Set(dupes)];
+                if (uniqueDupes.length === 0) return null;
+                return (
+                  <div
+                    style={{
+                      background: `${danger}14`,
+                      border: `1px solid ${danger}55`,
+                      borderRadius: 3,
+                      padding: "8px 12px",
+                      marginBottom: 10,
+                      fontSize: 12,
+                      color: danger,
+                    }}
+                  >
+                    ⚠ Frantic Heroes' initial Stances must each come from a different Archetype. Repeated:{" "}
+                    {uniqueDupes.join(", ")}
+                  </div>
+                );
+              })()}
               {Array.from({ length: stanceCountForLevel(char.level) }, (_, i) => i).map((i) => {
                 const form = formObjs[i];
                 const stance = char.stances[i];
@@ -2066,14 +2358,7 @@ function App() {
 
                     {form && (
                       <div style={{ fontSize: 12, lineHeight: 1.55, marginBottom: 6 }}>
-                        <b style={{ color: formBlue }}>{form.name}</b>{" "}
-                        <span style={{ color: dim }}>({form.alts})</span>
-                        <div style={{ margin: "3px 0" }}>{form.ability}</div>
-                        {form.actions.map((a) => (
-                          <div key={a.name} style={{ margin: "2px 0" }}>
-                            <b style={{ color: actionGreen }}>{a.cost}: {a.name}</b> — {a.effect}
-                          </div>
-                        ))}
+                        <FormDetail form={form} />
                       </div>
                     )}
                     {stance.style && (
@@ -2081,19 +2366,7 @@ function App() {
                         {(() => {
                           const s = stylesForArchetype.find((x) => x.name === stance.style);
                           if (!s) return null;
-                          return (
-                            <>
-                              <b style={{ color: styleRed }}>
-                                {s.name} <span style={{ fontWeight: 400 }}>(Range: {s.range})</span>
-                              </b>
-                              <div style={{ margin: "3px 0" }}>{s.ability}</div>
-                              {(s.actions || []).map((a) => (
-                                <div key={a.name} style={{ margin: "2px 0" }}>
-                                  <b style={{ color: actionGreen }}>{a.cost}: {a.name}</b> — {a.effect}
-                                </div>
-                              ))}
-                            </>
-                          );
+                          return <StyleDetail style={s} />;
                         })()}
                       </div>
                     )}
@@ -2370,8 +2643,47 @@ function App() {
 
         {tab === "reference" && (
           <>
-            <Panel title="Token Glossary" glow={utilityBlue} tag="OMEGA QUADRANT TRADE STANDARD — FULL INDEX" collapsible defaultOpen={false}>
-              {["Basic", "Common", "Rare"].map((cat) => (
+            <div style={{ position: "relative", marginBottom: 16 }}>
+              <input
+                style={{ ...inputStyle, paddingRight: fieldManualSearch ? 32 : 12 }}
+                placeholder="Search Forms, Styles, Archetypes, Tokens, rules..."
+                value={fieldManualSearch}
+                onChange={(e) => setFieldManualSearch(e.target.value)}
+              />
+              {fieldManualSearch && (
+                <button
+                  onClick={() => setFieldManualSearch("")}
+                  style={{
+                    position: "absolute",
+                    right: 8,
+                    top: "50%",
+                    transform: "translateY(-50%)",
+                    background: "none",
+                    border: "none",
+                    color: dim,
+                    fontSize: 16,
+                    cursor: "pointer",
+                    lineHeight: 1,
+                  }}
+                  aria-label="Clear search"
+                >
+                  ×
+                </button>
+              )}
+            </div>
+
+            <Panel
+              key={fieldManualSearch ? "glossary-open" : "glossary-closed"}
+              title="Token Glossary"
+              glow={utilityBlue}
+              tag="OMEGA QUADRANT TRADE STANDARD — FULL INDEX"
+              collapsible
+              defaultOpen={!!fieldManualSearch}
+            >
+              {["Basic", "Common", "Rare"].map((cat) => {
+                const items = TOKEN_GLOSSARY.filter((t) => t.category === cat && fmMatch(t.name, t.text));
+                if (fieldManualSearch && items.length === 0) return null;
+                return (
                 <div key={cat} style={{ marginBottom: 14 }}>
                   <div
                     style={{
@@ -2385,7 +2697,7 @@ function App() {
                   >
                     {cat} tokens
                   </div>
-                  {TOKEN_GLOSSARY.filter((t) => t.category === cat).map((t) => (
+                  {items.map((t) => (
                     <div
                       key={t.name}
                       style={{
@@ -2404,7 +2716,8 @@ function App() {
                     </div>
                   ))}
                 </div>
-              ))}
+                );
+              })}
               <div
                 style={{
                   fontSize: 11.5,
@@ -2424,8 +2737,18 @@ function App() {
               </div>
             </Panel>
 
-            <Panel title="Archetype Compendium" glow={magenta} tag="TAGS · SUPER MOVES · FULL INDEX" collapsible defaultOpen={false}>
-              {ARCHETYPE_NAMES.map((a) => {
+            <Panel
+              key={fieldManualSearch ? "compendium-open" : "compendium-closed"}
+              title="Archetype Compendium"
+              glow={magenta}
+              tag="TAGS · SUPER MOVES · FULL INDEX"
+              collapsible
+              defaultOpen={!!fieldManualSearch}
+            >
+              {ARCHETYPE_NAMES.filter((a) => {
+                const arch = GAME_DATA.archetypes[a];
+                return fmMatch(a, arch.description, arch.supers?.alpha?.name, arch.supers?.delta?.name, (arch.tags || []).join(" "));
+              }).map((a) => {
                 const arch = GAME_DATA.archetypes[a];
                 return (
                   <div
@@ -2479,8 +2802,15 @@ function App() {
               })}
             </Panel>
 
-            <Panel title="Basic Actions" glow={actionGreen} tag="EVERY HERO HAS ACCESS — NO STANCE REQUIRED" collapsible defaultOpen={false}>
-              {BASIC_ACTIONS.map((a) => (
+            <Panel
+              key={fieldManualSearch ? "basicactions-open" : "basicactions-closed"}
+              title="Basic Actions"
+              glow={actionGreen}
+              tag="EVERY HERO HAS ACCESS — NO STANCE REQUIRED"
+              collapsible
+              defaultOpen={!!fieldManualSearch}
+            >
+              {BASIC_ACTIONS.filter((a) => fmMatch(a.name, a.effect)).map((a) => (
                 <div
                   key={a.name}
                   style={{
@@ -2507,8 +2837,15 @@ function App() {
               ))}
             </Panel>
 
-            <Panel title="Bonuses" glow={actionGreen} tag="HIGHER STAKES · EYE OF THE STYLE · HEROIC POWER UP" collapsible defaultOpen={false}>
-              {BONUSES_DATA.map((b) => (
+            <Panel
+              key={fieldManualSearch ? "bonuses-open" : "bonuses-closed"}
+              title="Bonuses"
+              glow={actionGreen}
+              tag="HIGHER STAKES · EYE OF THE STYLE · HEROIC POWER UP"
+              collapsible
+              defaultOpen={!!fieldManualSearch}
+            >
+              {BONUSES_DATA.filter((b) => fmMatch(b.name, b.text)).map((b) => (
                 <div
                   key={b.name}
                   style={{
@@ -2528,8 +2865,15 @@ function App() {
               ))}
             </Panel>
 
-            <Panel title="Penalties" glow={danger} tag="HIGHER STAKES — WHAT YOUR ENEMIES CAN GIVE YOU" collapsible defaultOpen={false}>
-              {PENALTIES_DATA.map((p) => (
+            <Panel
+              key={fieldManualSearch ? "penalties-open" : "penalties-closed"}
+              title="Penalties"
+              glow={danger}
+              tag="HIGHER STAKES — WHAT YOUR ENEMIES CAN GIVE YOU"
+              collapsible
+              defaultOpen={!!fieldManualSearch}
+            >
+              {PENALTIES_DATA.filter((p) => fmMatch(p.name, p.text)).map((p) => (
                 <div
                   key={p.name}
                   style={{
@@ -2549,8 +2893,15 @@ function App() {
               ))}
             </Panel>
 
-            <Panel title="Rules Updates" glow={utilityBlue} tag="1E PATCH'D UP — QUICK REFERENCE" collapsible defaultOpen={false}>
-              {RULES_UPDATES.map((r) => (
+            <Panel
+              key={fieldManualSearch ? "rules-open" : "rules-closed"}
+              title="Rules Updates"
+              glow={utilityBlue}
+              tag="1E PATCH'D UP — QUICK REFERENCE"
+              collapsible
+              defaultOpen={!!fieldManualSearch}
+            >
+              {RULES_UPDATES.filter((r) => fmMatch(r.title, r.text)).map((r) => (
                 <div
                   key={r.title}
                   style={{
@@ -2573,8 +2924,17 @@ function App() {
               </div>
             </Panel>
 
-            <Panel title="All Forms &amp; Skills" glow={formBlue} tag="FEDERATION OPEN ARCHIVE — PUBLIC ACCESS" collapsible defaultOpen={false}>
-              {GAME_DATA.forms.map((f) => (
+            <Panel
+              key={fieldManualSearch ? "forms-open" : "forms-closed"}
+              title="All Forms &amp; Skills"
+              glow={formBlue}
+              tag="FEDERATION OPEN ARCHIVE — PUBLIC ACCESS"
+              collapsible
+              defaultOpen={!!fieldManualSearch}
+            >
+              {GAME_DATA.forms
+                .filter((f) => fmMatch(f.name, f.alts, f.ability, f.skill, f.actions.map((a) => `${a.name} ${a.effect}`).join(" ")))
+                .map((f) => (
                 <div
                   key={f.name}
                   style={{
@@ -2587,13 +2947,7 @@ function App() {
                     lineHeight: 1.55,
                   }}
                 >
-                  <b style={{ color: formBlue }}>{f.name}</b> <span style={{ color: dim }}>({f.alts})</span>
-                  <div>{f.ability}</div>
-                  {f.actions.map((a) => (
-                    <div key={a.name}>
-                      <b style={{ color: actionGreen }}>{a.cost}: {a.name}</b> — {a.effect}
-                    </div>
-                  ))}
+                  <FormDetail form={f} />
                   <div style={{ marginTop: 3, fontStyle: "italic", color: amber }}>Skill: {f.skill}</div>
                 </div>
               ))}
@@ -2638,10 +2992,7 @@ function App() {
                       lineHeight: 1.55,
                     }}
                   >
-                    <b style={{ color: magenta }}>
-                      {entryLabel(entry)} {entry.name.toUpperCase()}
-                    </b>
-                    <div style={{ color: "#c3dced" }}>{GAME_DATA.archetypes[entry.name][entry.tier]}</div>
+                    <ArchetypeAbilityDetail entry={entry} />
                   </div>
                 ))}
 
@@ -2673,26 +3024,12 @@ function App() {
                         STANCE {i + 1} — {label.toUpperCase()}
                       </b>
                       <div style={{ marginTop: 4 }}>
-                        <span style={{ color: formBlue }}>{form.name}</span> ({form.alts})
-                        <div>{form.ability}</div>
-                        {form.actions.map((a) => (
-                          <div key={a.name}>
-                            <b style={{ color: actionGreen }}>{a.cost}: {a.name}</b> — {a.effect}
-                          </div>
-                        ))}
+                        <FormDetail form={form} />
                         <div style={{ fontStyle: "italic", color: amber }}>Skill: {form.skill}</div>
                       </div>
                       {styleObj && (
                         <div style={{ marginTop: 6, borderTop: "1px dashed #223546", paddingTop: 6 }}>
-                          <span style={{ color: styleRed }}>
-                            {styleObj.name} (Range {styleObj.range})
-                          </span>
-                          <div>{styleObj.ability}</div>
-                          {(styleObj.actions || []).map((a) => (
-                            <div key={a.name}>
-                              <b style={{ color: actionGreen }}>{a.cost}: {a.name}</b> — {a.effect}
-                            </div>
-                          ))}
+                          <StyleDetail style={styleObj} />
                         </div>
                       )}
                     </div>
@@ -2734,6 +3071,43 @@ function App() {
 
         {tab === "gm" && (
           <>
+            {!gmHintDismissed && (
+              <div
+                style={{
+                  position: "relative",
+                  background: "#150f1a",
+                  border: `1px solid ${utilityBlue}55`,
+                  borderLeft: `3px solid ${utilityBlue}`,
+                  borderRadius: 3,
+                  padding: "10px 32px 10px 14px",
+                  marginBottom: 16,
+                  fontSize: 12.5,
+                  lineHeight: 1.55,
+                  color: "#c3dced",
+                }}
+              >
+                <b style={{ color: utilityBlue }}>New here?</b> Build a Warrior, Stooge, or Boss below — save it
+                to reuse across sessions. Scroll down for the Enemy Creation Checklist, Boss Archetypes, and
+                Complications if you want the full rules while you build.
+                <button
+                  onClick={dismissGmHint}
+                  aria-label="Dismiss"
+                  style={{
+                    position: "absolute",
+                    top: 6,
+                    right: 8,
+                    background: "none",
+                    border: "none",
+                    color: dim,
+                    fontSize: 18,
+                    cursor: "pointer",
+                    lineHeight: 1,
+                  }}
+                >
+                  ×
+                </button>
+              </div>
+            )}
             <Panel title="Data Link" tag="ENEMY ROSTER — LOCAL TO THIS DEVICE" glow={actionGreen}>
               <div style={{ display: "grid", gridTemplateColumns: "1fr auto", gap: 8, marginBottom: 10 }}>
                 <button
@@ -2752,7 +3126,10 @@ function App() {
                   <select
                     style={selectStyle}
                     value={selectedEnemySave}
-                    onChange={(e) => setSelectedEnemySave(e.target.value)}
+                    onChange={(e) => {
+                      setSelectedEnemySave(e.target.value);
+                      setConfirmDeleteEnemy(false);
+                    }}
                   >
                     <option value="">— select saved unit —</option>
                     {enemyRoster.map((key) => (
@@ -2770,18 +3147,23 @@ function App() {
                   </button>
                   <button
                     disabled={enemyLinkBusy || !selectedEnemySave}
-                    onClick={() => deleteEnemy(selectedEnemySave)}
-                    style={linkBtnStyle(danger)}
+                    onClick={() => {
+                      if (confirmDeleteEnemy) {
+                        deleteEnemy(selectedEnemySave);
+                        setConfirmDeleteEnemy(false);
+                      } else {
+                        setConfirmDeleteEnemy(true);
+                      }
+                    }}
+                    style={{
+                      ...linkBtnStyle(danger),
+                      ...(confirmDeleteEnemy ? { background: danger, color: "#1a0708" } : {}),
+                    }}
                   >
-                    DEL
+                    {confirmDeleteEnemy ? "SURE?" : "DEL"}
                   </button>
                 </div>
               </Field>
-              {enemyLinkStatus && (
-                <div style={{ fontFamily: monoFont, fontSize: 11, color: dim, letterSpacing: 1 }}>
-                  &gt; {enemyLinkStatus}
-                </div>
-              )}
             </Panel>
 
             <Panel title="Quick Enemy Builder" tag="WARRIOR · STOOGE · BOSS" glow={magenta}>
@@ -3044,23 +3426,12 @@ function App() {
                     </div>
                     {formObj && (
                       <div style={{ fontSize: 11.5, color: dim, lineHeight: 1.5 }}>
-                        <span style={{ color: formBlue }}>{formObj.name}</span>: {formObj.ability}
+                        <FormDetail form={formObj} />
                       </div>
                     )}
                     {styleObj && (
                       <div style={{ fontSize: 11.5, color: dim, lineHeight: 1.5, marginTop: 3 }}>
-                        <span style={{ color: styleRed }}>
-                          {styleObj.name} (Range {styleObj.range})
-                        </span>
-                        : {styleObj.ability}
-                        {(styleObj.actions || []).map((a) => (
-                          <div key={a.name} style={{ marginTop: 2 }}>
-                            <span style={{ color: actionGreen }}>
-                              {a.cost}: {a.name}
-                            </span>{" "}
-                            — {a.effect}
-                          </div>
-                        ))}
+                        <StyleDetail style={styleObj} />
                       </div>
                     )}
                   </div>
@@ -3388,6 +3759,7 @@ function App() {
           — END TRANSMISSION · SIGNAL LOST BEYOND THE DARKMATTER VOID —
         </div>
       </div>
+      <Toast message={linkStatus || enemyLinkStatus} />
     </div>
   );
 }
@@ -3431,7 +3803,7 @@ const tokBtnStyle = {
 };
 
     const root = ReactDOM.createRoot(document.getElementById('root'));
-    root.render(<App />);
+    root.render(<ErrorBoundary><App /></ErrorBoundary>);
   </script>
 </body>
 </html>
