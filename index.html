@@ -131,7 +131,7 @@ const TOKEN_GLOSSARY = [
   },
   {
     name: "Inspired Token",
-    color: "#7dffa0",
+    color: actionGreen,
     category: "Rare",
     text:
       "Teacher only. As a Reactive Action during an ally's turn (or your own), spend one to roll a Bonus Die and add that number to the active character's Action Pool. Usable once per turn.",
@@ -706,23 +706,32 @@ function enemyStanceCount(type) {
 }
 
 /* ---------- palette ---------- */
-/* Palette pulled from the Vara Spiral polities:
-   Federation teal  — idealistic, post-scarcity, the "default" register
-   Imperial violet  — psionic, old, ceremonial
-   Republic gold    — corporate, licensed, transactional
-   Void red         — Swarm Virus corruption / critical states
-   Free Space grey  — unregistered, Omega Quadrant frontier text */
-const bg0 = "#05080f";
-const bg1 = "#0b111c";
-const bg2 = "#0f1826";
-const cyan = "#3ff0ff"; // Federation
-const magenta = "#c86bff"; // Imperial
-const amber = "#ffb020"; // Republic
-const danger = "#ff4d5e"; // Void / Swarm corruption
-const dim = "#5f7688"; // Free Space grey
-const textMain = "#dbeeff";
+/* Official Panic at the Dojo color coding (base rulebook + 1E Patch'd Up):
+   Stances = Gold · Forms = Blue · Styles = Red · Actions = Green
+   Character Options (Build/Archetype) = Purple · Skills = Orange
+   Super Moves = Pink (Alpha) / Teal (Delta)
+   Everything else (backgrounds, HP, tokens, utility chrome) stays neutral. */
+const bg0 = "#08070a";
+const bg1 = "#120e14";
+const bg2 = "#191320";
+const ink = "#0a0810";
+const dim = "#8a7f8f";
+const textMain = "#f2ecf5";
+const danger = "#ff4d5e";
 
-const headFont = "'Orbitron', 'Rajdhani', sans-serif";
+const cyan = "#e8b93e"; // Stances — Gold (kept as `cyan` name for the many existing default-accent references)
+const magenta = "#a855f7"; // Character Options — Purple (kept as `magenta` name for the many existing default-accent references)
+const amber = "#f0902f"; // Skills — Orange
+
+const formBlue = "#3f8ff0";
+const styleRed = "#e0453f";
+const actionGreen = "#4fbf5f";
+const superPink = "#ef5da8";
+const superTeal = "#2bc7c0";
+const utilityBlue = "#8fd6ff"; // system-mechanics reference panels (Armor, Rules Updates, Token Glossary, Enemy Creation Checklist, Encounter Design, Enemy Advancement) — distinct from formBlue, ties them together as a family
+
+const headFont = "'Bebas Neue', sans-serif";
+const titleFont = "'Anton', 'Bebas Neue', sans-serif";
 const monoFont = "'Share Tech Mono', 'JetBrains Mono', monospace";
 
 function Panel({ title, children, glow, right, tag, collapsible, defaultOpen = true }) {
@@ -993,31 +1002,31 @@ function StanceCard({ i, form, style, archetype, archetypeAbilities, expanded, o
       {expanded && (
         <div style={{ padding: "0 12px 14px", fontFamily: monoFont, fontSize: 12.5, lineHeight: 1.6, color: "#c3dced" }}>
           <div style={{ borderTop: "1px solid #1c2c3b", paddingTop: 10, marginTop: 2 }}>
-            <div style={{ color: amber, fontWeight: 700, marginBottom: 3 }}>
+            <div style={{ color: formBlue, fontWeight: 700, marginBottom: 3 }}>
               FORM · {form.name.toUpperCase()}{" "}
               <span style={{ color: dim, fontWeight: 400 }}>({form.alts})</span>
             </div>
             <div style={{ marginBottom: 6 }}>{form.ability}</div>
             {form.actions.map((a) => (
               <div key={a.name} style={{ marginBottom: 3 }}>
-                <span style={{ color: cyan }}>
+                <span style={{ color: actionGreen }}>
                   {a.cost}: {a.name}
                 </span>{" "}
                 — {a.effect}
               </div>
             ))}
-            <div style={{ marginTop: 4, color: dim, fontStyle: "italic" }}>SKILL · {form.skill}</div>
+            <div style={{ marginTop: 4, color: amber, fontStyle: "italic" }}>SKILL · {form.skill}</div>
           </div>
 
           {style && (
             <div style={{ borderTop: "1px solid #1c2c3b", paddingTop: 10, marginTop: 10 }}>
-              <div style={{ color: magenta, fontWeight: 700, marginBottom: 3 }}>
+              <div style={{ color: styleRed, fontWeight: 700, marginBottom: 3 }}>
                 STYLE · {style.name.toUpperCase()} <span style={{ color: dim, fontWeight: 400 }}>(range {style.range})</span>
               </div>
               <div style={{ marginBottom: (style.actions || []).length ? 4 : 0 }}>{style.ability}</div>
               {(style.actions || []).map((a) => (
                 <div key={a.name} style={{ marginTop: 2 }}>
-                  <span style={{ color: magenta }}>
+                  <span style={{ color: actionGreen }}>
                     {a.cost}: {a.name}
                   </span>{" "}
                   — {a.effect}
@@ -1028,7 +1037,7 @@ function StanceCard({ i, form, style, archetype, archetypeAbilities, expanded, o
 
           {(archetypeAbilities || []).map((entry) => (
             <div key={entry.key} style={{ borderTop: "1px solid #1c2c3b", paddingTop: 10, marginTop: 10 }}>
-              <div style={{ color: "#7dffa0", fontWeight: 700, marginBottom: 3 }}>
+              <div style={{ color: magenta, fontWeight: 700, marginBottom: 3 }}>
                 {entryLabel(entry)} {archetype.toUpperCase()} ABILITY{" "}
                 <span style={{ color: dim, fontWeight: 400 }}>(always active, regardless of Stance)</span>
               </div>
@@ -1365,10 +1374,10 @@ function App() {
 
   const formObjs = char.forms.map((fn) => GAME_DATA.forms.find((f) => f.name === fn));
   const hpPct = char.maxHp > 0 ? char.hp / char.maxHp : 0;
-  const hpColor = hpPct <= 0.25 ? danger : hpPct <= 0.5 ? amber : cyan;
+  const hpColor = hpPct <= 0.25 ? danger : hpPct <= 0.5 ? amber : actionGreen;
 
   const enemyHpPct = enemy.maxHp > 0 ? enemy.hp / enemy.maxHp : 0;
-  const enemyHpColor = enemyHpPct <= 0.25 ? danger : enemyHpPct <= 0.5 ? amber : cyan;
+  const enemyHpColor = enemyHpPct <= 0.25 ? danger : enemyHpPct <= 0.5 ? amber : actionGreen;
 
   return (
     <div
@@ -1384,7 +1393,7 @@ function App() {
       }}
     >
       <style>{`
-        @import url('https://fonts.googleapis.com/css2?family=Orbitron:wght@500;700;900&family=Share+Tech+Mono&family=Rajdhani:wght@600;700&display=swap');
+        @import url('https://fonts.googleapis.com/css2?family=Anton&family=Bebas+Neue&family=Share+Tech+Mono&family=Rajdhani:wght@600;700&display=swap');
         * { box-sizing: border-box; }
         ::selection { background: ${cyan}; color: #001018; }
         .tab-btn { transition: all .15s; cursor: pointer; }
@@ -1393,10 +1402,6 @@ function App() {
         .tok-btn { transition: transform .1s; cursor: pointer; }
         .tok-btn:active { transform: scale(0.88); }
         body { background: ${bg0}; }
-        @keyframes scan {
-          0% { background-position: 0 0; }
-          100% { background-position: 0 40px; }
-        }
         @media print {
           body * { visibility: hidden; }
           #export-sheet, #export-sheet * { visibility: visible; }
@@ -1408,9 +1413,9 @@ function App() {
       <div
         style={{
           position: "relative",
-          background: `linear-gradient(180deg, #0c1524, #060a12)`,
-          borderBottom: `1px solid ${cyan}44`,
-          padding: "26px 20px 20px",
+          background: `linear-gradient(180deg, #1c1220, ${ink})`,
+          borderBottom: `3px solid ${cyan}`,
+          padding: "30px 20px 20px",
           textAlign: "center",
           overflow: "hidden",
         }}
@@ -1419,31 +1424,44 @@ function App() {
           style={{
             position: "absolute",
             inset: 0,
-            backgroundImage: `repeating-linear-gradient(180deg, ${cyan}08 0px, transparent 2px, transparent 4px)`,
-            animation: "scan 6s linear infinite",
+            background: `repeating-conic-gradient(from 0deg at 50% 120%, transparent 0deg 3deg, ${cyan}12 3deg 4deg)`,
             pointerEvents: "none",
           }}
         />
         <div
           style={{
-            fontFamily: headFont,
-            fontWeight: 900,
-            fontSize: 34,
-            letterSpacing: 5,
+            position: "absolute",
+            inset: 0,
+            backgroundImage: `radial-gradient(${cyan}22 1px, transparent 1.2px)`,
+            backgroundSize: "6px 6px",
+            maskImage: "linear-gradient(180deg, black, transparent 80%)",
+            WebkitMaskImage: "linear-gradient(180deg, black, transparent 80%)",
+            pointerEvents: "none",
+          }}
+        />
+        <div
+          style={{
+            position: "relative",
+            fontFamily: titleFont,
+            fontWeight: "normal",
+            fontSize: 40,
+            letterSpacing: 2,
             color: textMain,
-            lineHeight: 1.1,
-            textShadow: `0 0 18px ${cyan}88`,
+            lineHeight: 0.95,
+            textTransform: "uppercase",
+            textShadow: `3px 3px 0 ${ink}, 0 0 26px ${cyan}55`,
           }}
         >
           PANIC <span style={{ color: cyan }}>//</span> DOJO
         </div>
         <div
           style={{
+            position: "relative",
             fontFamily: monoFont,
             fontSize: 11,
             letterSpacing: 3,
             color: dim,
-            marginTop: 6,
+            marginTop: 8,
             textTransform: "uppercase",
           }}
         >
@@ -1451,6 +1469,7 @@ function App() {
         </div>
         <div
           style={{
+            position: "relative",
             fontFamily: monoFont,
             fontSize: 9.5,
             letterSpacing: 2,
@@ -1490,14 +1509,14 @@ function App() {
               minWidth: 120,
               padding: "10px 8px",
               fontFamily: headFont,
-              fontSize: 13,
+              fontSize: 14,
               letterSpacing: 1,
-              border: `1px solid ${tab === key ? cyan : "#233448"}`,
-              borderRadius: 3,
-              background: tab === key ? `${cyan}1f` : "#0a121d",
-              color: tab === key ? cyan : dim,
+              border: `2px solid ${tab === key ? "#ffd77a" : ink}`,
+              background: tab === key ? cyan : "#150f1a",
+              color: tab === key ? ink : dim,
               textTransform: "uppercase",
               boxShadow: tab === key ? `0 0 14px -4px ${cyan}` : "none",
+              clipPath: "polygon(6px 0, 100% 0, 100% calc(100% - 6px), calc(100% - 6px) 100%, 0 100%, 0 6px)",
             }}
           >
             {label}
@@ -1508,13 +1527,13 @@ function App() {
       <div style={{ maxWidth: 640, margin: "22px auto 0", padding: "0 16px" }}>
         {tab === "build" && (
           <>
-            <Panel title="Data Link" tag="PERSONAL STORAGE — LOCAL TO THIS DEVICE" glow="#7dffa0">
+            <Panel title="Data Link" tag="PERSONAL STORAGE — LOCAL TO THIS DEVICE" glow={actionGreen}>
               <div style={{ display: "grid", gridTemplateColumns: "1fr auto", gap: 8, marginBottom: 10 }}>
                 <button
                   disabled={linkBusy}
                   onClick={saveHero}
                   style={{
-                    ...linkBtnStyle("#7dffa0"),
+                    ...linkBtnStyle(actionGreen),
                     opacity: linkBusy ? 0.5 : 1,
                   }}
                 >
@@ -1593,7 +1612,7 @@ function App() {
               </Field>
             </Panel>
 
-            <Panel title="Character Details" tag="DOSSIER — DESCRIPTIVE RECORD">
+            <Panel title="Character Details" tag="DOSSIER — DESCRIPTIVE RECORD" glow={magenta}>
               <Field label="Build">
                 <select style={selectStyle} value={char.build} onChange={(e) => update({ build: e.target.value })}>
                   {BUILD_DATA.map((b) => (
@@ -1652,7 +1671,7 @@ function App() {
 
             <Panel
               title="Advancement"
-              glow="#7dffa0"
+              glow={actionGreen}
               tag="1E PATCH'D UP — LEVEL &amp; EXPERIENCE"
               right={
                 <span style={{ fontFamily: monoFont, fontSize: 10, color: dim }}>
@@ -1708,15 +1727,15 @@ function App() {
                   >
                     <div style={{ background: "#0a121d", border: "1px solid #223546", borderRadius: 3, padding: "6px 8px" }}>
                       <div style={{ color: dim, fontSize: 10 }}>BONUS DIE</div>
-                      <div style={{ color: "#7dffa0", fontFamily: headFont }}>{row.bonusDie}</div>
+                      <div style={{ color: actionGreen, fontFamily: headFont }}>{row.bonusDie}</div>
                     </div>
                     <div style={{ background: "#0a121d", border: "1px solid #223546", borderRadius: 3, padding: "6px 8px" }}>
                       <div style={{ color: dim, fontSize: 10 }}>BONUS HP</div>
-                      <div style={{ color: "#7dffa0", fontFamily: headFont }}>+{row.hp}</div>
+                      <div style={{ color: actionGreen, fontFamily: headFont }}>+{row.hp}</div>
                     </div>
                     <div style={{ background: "#0a121d", border: "1px solid #223546", borderRadius: 3, padding: "6px 8px" }}>
                       <div style={{ color: dim, fontSize: 10 }}>STANCES</div>
-                      <div style={{ color: "#7dffa0", fontFamily: headFont }}>{stanceCountForLevel(char.level)}</div>
+                      <div style={{ color: actionGreen, fontFamily: headFont }}>{stanceCountForLevel(char.level)}</div>
                     </div>
                   </div>
                 );
@@ -1767,7 +1786,7 @@ function App() {
                         style={{
                           background: "#0a121d",
                           border: `1px solid #2c3f52`,
-                          borderLeft: `3px solid ${tier === "alpha" ? magenta : cyan}`,
+                          borderLeft: `3px solid ${tier === "alpha" ? superPink : superTeal}`,
                           borderRadius: 3,
                           padding: "8px 12px",
                           marginBottom: 6,
@@ -1775,7 +1794,7 @@ function App() {
                           lineHeight: 1.5,
                         }}
                       >
-                        <b style={{ color: tier === "alpha" ? magenta : cyan }}>
+                        <b style={{ color: tier === "alpha" ? superPink : superTeal }}>
                           {tier === "alpha" ? "α" : "Δ"} {s.name} <span style={{ color: dim, fontWeight: 400 }}>({a})</span>
                         </b>
                         <div style={{ color: "#c3dced" }}>{s.effect}</div>
@@ -1952,7 +1971,7 @@ function App() {
 
             <Panel
               title="Forms & Stances"
-              glow={amber}
+              glow={cyan}
               tag="REPUBLIC COMBAT LICENSING BUREAU — RHO QUADRANT"
               right={
                 <span style={{ fontFamily: monoFont, fontSize: 10, color: dim }}>
@@ -1998,7 +2017,7 @@ function App() {
                       background: "#0a121d",
                     }}
                   >
-                    <div style={{ fontFamily: headFont, fontSize: 13, letterSpacing: 1.5, marginBottom: 10, color: amber }}>
+                    <div style={{ fontFamily: headFont, fontSize: 13, letterSpacing: 1.5, marginBottom: 10, color: cyan }}>
                       STANCE {i + 1}
                     </div>
                     <div
@@ -2047,12 +2066,12 @@ function App() {
 
                     {form && (
                       <div style={{ fontSize: 12, lineHeight: 1.55, marginBottom: 6 }}>
-                        <b style={{ color: cyan }}>{form.name}</b>{" "}
+                        <b style={{ color: formBlue }}>{form.name}</b>{" "}
                         <span style={{ color: dim }}>({form.alts})</span>
                         <div style={{ margin: "3px 0" }}>{form.ability}</div>
                         {form.actions.map((a) => (
                           <div key={a.name} style={{ margin: "2px 0" }}>
-                            <b>{a.cost}: {a.name}</b> — {a.effect}
+                            <b style={{ color: actionGreen }}>{a.cost}: {a.name}</b> — {a.effect}
                           </div>
                         ))}
                       </div>
@@ -2064,13 +2083,13 @@ function App() {
                           if (!s) return null;
                           return (
                             <>
-                              <b style={{ color: magenta }}>
+                              <b style={{ color: styleRed }}>
                                 {s.name} <span style={{ fontWeight: 400 }}>(Range: {s.range})</span>
                               </b>
                               <div style={{ margin: "3px 0" }}>{s.ability}</div>
                               {(s.actions || []).map((a) => (
                                 <div key={a.name} style={{ margin: "2px 0" }}>
-                                  <b>{a.cost}: {a.name}</b> — {a.effect}
+                                  <b style={{ color: actionGreen }}>{a.cost}: {a.name}</b> — {a.effect}
                                 </div>
                               ))}
                             </>
@@ -2100,7 +2119,7 @@ function App() {
               })}
             </Panel>
 
-            <Panel title="Skills" glow="#7dffa0" tag="UNREGISTERED — OMEGA QUADRANT FREE SPACE">
+            <Panel title="Skills" glow={amber} tag="UNREGISTERED — OMEGA QUADRANT FREE SPACE">
               {[0, 1, 2].map((i) => (
                 <Field key={i} label={`Skill ${i + 1} (default: ${formObjs[i]?.skill.split(" — ")[0] || "—"})`}>
                   <input
@@ -2216,24 +2235,24 @@ function App() {
               </Field>
             </Panel>
 
-            <Panel title="Armor" glow="#8fd6ff" tag="1E PATCH'D UP — DIMINISHING BLOCK">
+            <Panel title="Armor" glow={utilityBlue} tag="1E PATCH'D UP — DIMINISHING BLOCK">
               <div style={{ fontSize: 12, color: "#c3dced", marginBottom: 10, lineHeight: 1.5 }}>
                 First trigger each turn blocks 3 damage, second blocks 2, third and beyond block 1. Resets
                 every turn.
               </div>
               <div style={{ display: "flex", alignItems: "center", gap: 10 }}>
-                <button className="tok-btn" onClick={() => update({ armorTriggersUsed: Math.max(0, char.armorTriggersUsed - 1) })} style={hpBtnStyle("#8fd6ff")}>
+                <button className="tok-btn" onClick={() => update({ armorTriggersUsed: Math.max(0, char.armorTriggersUsed - 1) })} style={hpBtnStyle(utilityBlue)}>
                   −
                 </button>
                 <div style={{ flex: 1, textAlign: "center" }}>
-                  <div style={{ fontFamily: headFont, fontSize: 18, color: "#8fd6ff" }}>
+                  <div style={{ fontFamily: headFont, fontSize: 18, color: utilityBlue }}>
                     {char.armorTriggersUsed} trigger{char.armorTriggersUsed === 1 ? "" : "s"} used
                   </div>
                   <div style={{ fontSize: 11, color: dim }}>
                     next block: {char.armorTriggersUsed === 0 ? 3 : char.armorTriggersUsed === 1 ? 2 : 1} damage
                   </div>
                 </div>
-                <button className="tok-btn" onClick={() => update({ armorTriggersUsed: char.armorTriggersUsed + 1 })} style={hpBtnStyle("#8fd6ff")}>
+                <button className="tok-btn" onClick={() => update({ armorTriggersUsed: char.armorTriggersUsed + 1 })} style={hpBtnStyle(utilityBlue)}>
                   +
                 </button>
               </div>
@@ -2245,7 +2264,7 @@ function App() {
               </button>
             </Panel>
 
-            <Panel title="Tokens" glow={magenta} tag="OMEGA QUADRANT TRADE STANDARD">
+            <Panel title="Tokens" glow={cyan} tag="OMEGA QUADRANT TRADE STANDARD">
               <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr", gap: 10 }}>
                 {TOKEN_TYPES.map((t) => (
                   <div
@@ -2281,7 +2300,7 @@ function App() {
             </Panel>
 
             {char.superMoves.filter(Boolean).length > 0 && (
-              <Panel title="Super Moves" glow={magenta} tag="ONCE PER FIGHT — COST: TWO MATCHING NUMBERS, 3+">
+              <Panel title="Super Moves" glow={cyan} tag="ONCE PER FIGHT — COST: TWO MATCHING NUMBERS, 3+">
                 {char.superMoves.filter(Boolean).map((sm) => {
                   const [a, tier] = sm.split("|");
                   const s = GAME_DATA.archetypes[a]?.supers?.[tier];
@@ -2292,7 +2311,7 @@ function App() {
                       style={{
                         background: "#0a121d",
                         border: `1px solid #2c3f52`,
-                        borderLeft: `3px solid ${tier === "alpha" ? magenta : cyan}`,
+                        borderLeft: `3px solid ${tier === "alpha" ? superPink : superTeal}`,
                         borderRadius: 3,
                         padding: "8px 12px",
                         marginBottom: 6,
@@ -2300,7 +2319,7 @@ function App() {
                         lineHeight: 1.5,
                       }}
                     >
-                      <b style={{ color: tier === "alpha" ? magenta : cyan }}>
+                      <b style={{ color: tier === "alpha" ? superPink : superTeal }}>
                         {tier === "alpha" ? "α" : "Δ"} {s.name} <span style={{ color: dim, fontWeight: 400 }}>({a})</span>
                       </b>
                       <div style={{ color: "#c3dced" }}>{s.effect}</div>
@@ -2312,7 +2331,7 @@ function App() {
 
             <Panel
               title="Active Stances"
-              glow={amber}
+              glow={cyan}
               tag="REPUBLIC LICENSED LOADOUT"
               right={
                 <span style={{ fontFamily: monoFont, fontSize: 10, color: dim }}>tap to expand</span>
@@ -2338,7 +2357,7 @@ function App() {
               })}
             </Panel>
 
-            <Panel title="Field Notes" glow="#7dffa0" tag="OFF-RECORD — LOCAL STORAGE ONLY">
+            <Panel title="Field Notes" glow={actionGreen} tag="OFF-RECORD — LOCAL STORAGE ONLY">
               <textarea
                 style={textAreaStyle}
                 value={char.notes}
@@ -2351,7 +2370,7 @@ function App() {
 
         {tab === "reference" && (
           <>
-            <Panel title="Token Glossary" glow={magenta} tag="OMEGA QUADRANT TRADE STANDARD — FULL INDEX" collapsible defaultOpen={false}>
+            <Panel title="Token Glossary" glow={utilityBlue} tag="OMEGA QUADRANT TRADE STANDARD — FULL INDEX" collapsible defaultOpen={false}>
               {["Basic", "Common", "Rare"].map((cat) => (
                 <div key={cat} style={{ marginBottom: 14 }}>
                   <div
@@ -2405,7 +2424,7 @@ function App() {
               </div>
             </Panel>
 
-            <Panel title="Archetype Compendium" glow="#7dffa0" tag="TAGS · SUPER MOVES · FULL INDEX" collapsible defaultOpen={false}>
+            <Panel title="Archetype Compendium" glow={magenta} tag="TAGS · SUPER MOVES · FULL INDEX" collapsible defaultOpen={false}>
               {ARCHETYPE_NAMES.map((a) => {
                 const arch = GAME_DATA.archetypes[a];
                 return (
@@ -2422,7 +2441,7 @@ function App() {
                     }}
                   >
                     <div style={{ display: "flex", alignItems: "center", justifyContent: "space-between", flexWrap: "wrap", gap: 6 }}>
-                      <b style={{ color: "#7dffa0", fontFamily: headFont, letterSpacing: 1 }}>{a.toUpperCase()}</b>
+                      <b style={{ color: magenta, fontFamily: headFont, letterSpacing: 1 }}>{a.toUpperCase()}</b>
                       <div style={{ display: "flex", gap: 4 }}>
                         {(arch.tags || []).map((t) => (
                           <span
@@ -2446,11 +2465,11 @@ function App() {
                     {arch.supers && (
                       <div style={{ borderTop: "1px dashed #223546", paddingTop: 6 }}>
                         <div>
-                          <span style={{ color: magenta }}>α SUPER — {arch.supers.alpha.name}:</span>{" "}
+                          <span style={{ color: superPink }}>α SUPER — {arch.supers.alpha.name}:</span>{" "}
                           {arch.supers.alpha.effect}
                         </div>
                         <div style={{ marginTop: 4 }}>
-                          <span style={{ color: cyan }}>Δ SUPER — {arch.supers.delta.name}:</span>{" "}
+                          <span style={{ color: superTeal }}>Δ SUPER — {arch.supers.delta.name}:</span>{" "}
                           {arch.supers.delta.effect}
                         </div>
                       </div>
@@ -2460,14 +2479,14 @@ function App() {
               })}
             </Panel>
 
-            <Panel title="Basic Actions" glow={cyan} tag="EVERY HERO HAS ACCESS — NO STANCE REQUIRED" collapsible defaultOpen={false}>
+            <Panel title="Basic Actions" glow={actionGreen} tag="EVERY HERO HAS ACCESS — NO STANCE REQUIRED" collapsible defaultOpen={false}>
               {BASIC_ACTIONS.map((a) => (
                 <div
                   key={a.name}
                   style={{
                     background: "#0a121d",
                     border: "1px solid #223546",
-                    borderLeft: `3px solid ${a.patched ? amber : cyan}`,
+                    borderLeft: `3px solid ${a.patched ? amber : actionGreen}`,
                     borderRadius: 3,
                     padding: "8px 12px",
                     marginBottom: 6,
@@ -2475,7 +2494,7 @@ function App() {
                     lineHeight: 1.55,
                   }}
                 >
-                  <b style={{ color: a.patched ? amber : cyan }}>
+                  <b style={{ color: a.patched ? amber : actionGreen }}>
                     {a.cost}: {a.name}
                   </b>
                   {a.patched && (
@@ -2488,14 +2507,14 @@ function App() {
               ))}
             </Panel>
 
-            <Panel title="Bonuses" glow="#7dffa0" tag="HIGHER STAKES · EYE OF THE STYLE · HEROIC POWER UP" collapsible defaultOpen={false}>
+            <Panel title="Bonuses" glow={actionGreen} tag="HIGHER STAKES · EYE OF THE STYLE · HEROIC POWER UP" collapsible defaultOpen={false}>
               {BONUSES_DATA.map((b) => (
                 <div
                   key={b.name}
                   style={{
                     background: "#0a121d",
                     border: "1px solid #223546",
-                    borderLeft: "3px solid #7dffa0",
+                    borderLeft: `3px solid ${actionGreen}`,
                     borderRadius: 3,
                     padding: "8px 12px",
                     marginBottom: 6,
@@ -2503,7 +2522,7 @@ function App() {
                     lineHeight: 1.55,
                   }}
                 >
-                  <b style={{ color: "#7dffa0" }}>{b.name}</b>
+                  <b style={{ color: actionGreen }}>{b.name}</b>
                   <div style={{ color: "#c3dced" }}>{b.text}</div>
                 </div>
               ))}
@@ -2530,7 +2549,7 @@ function App() {
               ))}
             </Panel>
 
-            <Panel title="Rules Updates" glow="#8fd6ff" tag="1E PATCH'D UP — QUICK REFERENCE" collapsible defaultOpen={false}>
+            <Panel title="Rules Updates" glow={utilityBlue} tag="1E PATCH'D UP — QUICK REFERENCE" collapsible defaultOpen={false}>
               {RULES_UPDATES.map((r) => (
                 <div
                   key={r.title}
@@ -2545,7 +2564,7 @@ function App() {
                     lineHeight: 1.55,
                   }}
                 >
-                  <b style={{ color: "#8fd6ff" }}>{r.title}</b>
+                  <b style={{ color: utilityBlue }}>{r.title}</b>
                   <div style={{ color: "#c3dced" }}>{r.text}</div>
                 </div>
               ))}
@@ -2554,7 +2573,7 @@ function App() {
               </div>
             </Panel>
 
-            <Panel title="All Forms &amp; Skills" glow={cyan} tag="FEDERATION OPEN ARCHIVE — PUBLIC ACCESS" collapsible defaultOpen={false}>
+            <Panel title="All Forms &amp; Skills" glow={formBlue} tag="FEDERATION OPEN ARCHIVE — PUBLIC ACCESS" collapsible defaultOpen={false}>
               {GAME_DATA.forms.map((f) => (
                 <div
                   key={f.name}
@@ -2568,14 +2587,14 @@ function App() {
                     lineHeight: 1.55,
                   }}
                 >
-                  <b style={{ color: cyan }}>{f.name}</b> <span style={{ color: dim }}>({f.alts})</span>
+                  <b style={{ color: formBlue }}>{f.name}</b> <span style={{ color: dim }}>({f.alts})</span>
                   <div>{f.ability}</div>
                   {f.actions.map((a) => (
                     <div key={a.name}>
-                      <b>{a.cost}: {a.name}</b> — {a.effect}
+                      <b style={{ color: actionGreen }}>{a.cost}: {a.name}</b> — {a.effect}
                     </div>
                   ))}
-                  <div style={{ marginTop: 3, fontStyle: "italic", color: "#7dffa0" }}>Skill: {f.skill}</div>
+                  <div style={{ marginTop: 3, fontStyle: "italic", color: amber }}>Skill: {f.skill}</div>
                 </div>
               ))}
             </Panel>
@@ -2584,9 +2603,9 @@ function App() {
 
         {tab === "export" && (
           <>
-            <Panel title="Export Controls" glow="#7dffa0" tag="TRANSMIT RECORD OFF-DEVICE">
+            <Panel title="Export Controls" glow={actionGreen} tag="TRANSMIT RECORD OFF-DEVICE">
               <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr", gap: 8 }}>
-                <button onClick={downloadExport} style={linkBtnStyle("#7dffa0")}>
+                <button onClick={downloadExport} style={linkBtnStyle(actionGreen)}>
                   ⬇ DOWNLOAD .TXT
                 </button>
                 <button onClick={() => window.print()} style={linkBtnStyle(cyan)}>
@@ -2596,7 +2615,7 @@ function App() {
             </Panel>
 
             <div id="export-sheet">
-              <Panel title="Hero Sheet" glow={amber} tag="FULL RECORD — ALL STANCES &amp; TOKENS">
+              <Panel title="Hero Sheet" glow={cyan} tag="FULL RECORD — ALL STANCES &amp; TOKENS">
                 <div style={{ fontFamily: headFont, fontSize: 22, letterSpacing: 1.5, color: textMain, marginBottom: 2 }}>
                   {char.name || "UNNAMED HERO"}
                 </div>
@@ -2626,7 +2645,7 @@ function App() {
                   </div>
                 ))}
 
-                <div style={{ fontFamily: headFont, fontSize: 12, letterSpacing: 2, color: amber, margin: "14px 0 8px" }}>
+                <div style={{ fontFamily: headFont, fontSize: 12, letterSpacing: 2, color: cyan, margin: "14px 0 8px" }}>
                   STANCES
                 </div>
                 {char.stances.slice(0, stanceCountForLevel(char.level)).map((s, i) => {
@@ -2650,28 +2669,28 @@ function App() {
                         lineHeight: 1.55,
                       }}
                     >
-                      <b style={{ color: amber }}>
+                      <b style={{ color: cyan }}>
                         STANCE {i + 1} — {label.toUpperCase()}
                       </b>
                       <div style={{ marginTop: 4 }}>
-                        <span style={{ color: cyan }}>{form.name}</span> ({form.alts})
+                        <span style={{ color: formBlue }}>{form.name}</span> ({form.alts})
                         <div>{form.ability}</div>
                         {form.actions.map((a) => (
                           <div key={a.name}>
-                            <b>{a.cost}: {a.name}</b> — {a.effect}
+                            <b style={{ color: actionGreen }}>{a.cost}: {a.name}</b> — {a.effect}
                           </div>
                         ))}
-                        <div style={{ fontStyle: "italic", color: "#7dffa0" }}>Skill: {form.skill}</div>
+                        <div style={{ fontStyle: "italic", color: amber }}>Skill: {form.skill}</div>
                       </div>
                       {styleObj && (
                         <div style={{ marginTop: 6, borderTop: "1px dashed #223546", paddingTop: 6 }}>
-                          <span style={{ color: magenta }}>
+                          <span style={{ color: styleRed }}>
                             {styleObj.name} (Range {styleObj.range})
                           </span>
                           <div>{styleObj.ability}</div>
                           {(styleObj.actions || []).map((a) => (
                             <div key={a.name}>
-                              <b>{a.cost}: {a.name}</b> — {a.effect}
+                              <b style={{ color: actionGreen }}>{a.cost}: {a.name}</b> — {a.effect}
                             </div>
                           ))}
                         </div>
@@ -2715,12 +2734,12 @@ function App() {
 
         {tab === "gm" && (
           <>
-            <Panel title="Data Link" tag="ENEMY ROSTER — LOCAL TO THIS DEVICE" glow="#7dffa0">
+            <Panel title="Data Link" tag="ENEMY ROSTER — LOCAL TO THIS DEVICE" glow={actionGreen}>
               <div style={{ display: "grid", gridTemplateColumns: "1fr auto", gap: 8, marginBottom: 10 }}>
                 <button
                   disabled={enemyLinkBusy}
                   onClick={saveEnemy}
-                  style={{ ...linkBtnStyle("#7dffa0"), opacity: enemyLinkBusy ? 0.5 : 1 }}
+                  style={{ ...linkBtnStyle(actionGreen), opacity: enemyLinkBusy ? 0.5 : 1 }}
                 >
                   ⬇ SAVE UNIT
                 </button>
@@ -2966,7 +2985,7 @@ function App() {
                 </Field>
               )}
 
-              <div style={{ fontFamily: headFont, fontSize: 12, letterSpacing: 1.5, color: amber, margin: "12px 0 8px" }}>
+              <div style={{ fontFamily: headFont, fontSize: 12, letterSpacing: 1.5, color: cyan, margin: "12px 0 8px" }}>
                 STANCE{enemyStanceCount(enemy.type) > 1 ? "S" : ""}
               </div>
               {Array.from({ length: enemyStanceCount(enemy.type) }, (_, i) => i).map((i) => {
@@ -3025,18 +3044,18 @@ function App() {
                     </div>
                     {formObj && (
                       <div style={{ fontSize: 11.5, color: dim, lineHeight: 1.5 }}>
-                        <span style={{ color: cyan }}>{formObj.name}</span>: {formObj.ability}
+                        <span style={{ color: formBlue }}>{formObj.name}</span>: {formObj.ability}
                       </div>
                     )}
                     {styleObj && (
                       <div style={{ fontSize: 11.5, color: dim, lineHeight: 1.5, marginTop: 3 }}>
-                        <span style={{ color: magenta }}>
+                        <span style={{ color: styleRed }}>
                           {styleObj.name} (Range {styleObj.range})
                         </span>
                         : {styleObj.ability}
                         {(styleObj.actions || []).map((a) => (
                           <div key={a.name} style={{ marginTop: 2 }}>
-                            <span style={{ color: magenta }}>
+                            <span style={{ color: actionGreen }}>
                               {a.cost}: {a.name}
                             </span>{" "}
                             — {a.effect}
@@ -3076,7 +3095,7 @@ function App() {
                   style={{
                     background: "#0a121d",
                     border: "1px solid #2c3f52",
-                    borderLeft: `3px solid ${enemy.superMove === "alpha" ? magenta : cyan}`,
+                    borderLeft: `3px solid ${enemy.superMove === "alpha" ? superPink : superTeal}`,
                     borderRadius: 3,
                     padding: "8px 12px",
                     marginBottom: 12,
@@ -3084,7 +3103,7 @@ function App() {
                     lineHeight: 1.55,
                   }}
                 >
-                  <b style={{ color: enemy.superMove === "alpha" ? magenta : cyan }}>
+                  <b style={{ color: enemy.superMove === "alpha" ? superPink : superTeal }}>
                     {enemy.superMove === "alpha" ? "α" : "Δ"}{" "}
                     {GAME_DATA.archetypes[enemy.archetype].supers[enemy.superMove].name}
                   </b>
@@ -3205,10 +3224,10 @@ function App() {
               </Field>
             </Panel>
 
-            <Panel title="Enemy Creation Checklist" glow="#8fd6ff" tag="WARRIORS · STOOGES · BOSSES" collapsible defaultOpen={false}>
+            <Panel title="Enemy Creation Checklist" glow={utilityBlue} tag="WARRIORS · STOOGES · BOSSES" collapsible defaultOpen={false}>
               {Object.entries(ENEMY_TYPE_INFO).map(([type, info]) => (
                 <div key={type} style={{ marginBottom: 14 }}>
-                  <div style={{ fontFamily: headFont, fontSize: 13, color: "#8fd6ff", letterSpacing: 1, marginBottom: 4 }}>
+                  <div style={{ fontFamily: headFont, fontSize: 13, color: utilityBlue, letterSpacing: 1, marginBottom: 4 }}>
                     {type.toUpperCase()}
                   </div>
                   <div style={{ fontSize: 12, color: dim, marginBottom: 6 }}>{info.summary}</div>
@@ -3249,7 +3268,7 @@ function App() {
               ))}
             </Panel>
 
-            <Panel title="Enemy Advancement" glow="#7dffa0" tag="1E PATCH'D UP — ENEMIES LEVEL WITH THE PARTY" collapsible defaultOpen={false}>
+            <Panel title="Enemy Advancement" glow={utilityBlue} tag="1E PATCH'D UP — ENEMIES LEVEL WITH THE PARTY" collapsible defaultOpen={false}>
               <div style={{ fontSize: 11.5, color: "#c3dced", lineHeight: 1.6, marginBottom: 10 }}>
                 Enemies are always the same level as the Heroes.
               </div>
@@ -3260,7 +3279,7 @@ function App() {
                 <div style={{ color: dim, fontFamily: headFont }}>BENEFIT</div>
                 {ENEMY_ADVANCEMENT_TABLE.map((r) => (
                   <React.Fragment key={r.level}>
-                    <div style={{ color: "#7dffa0" }}>{r.level}</div>
+                    <div style={{ color: utilityBlue }}>{r.level}</div>
                     <div style={{ color: "#c3dced" }}>{r.bossDie}</div>
                     <div style={{ color: "#c3dced" }}>{r.warriorDie}</div>
                     <div style={{ color: "#c3dced" }}>{r.benefit}</div>
@@ -3268,16 +3287,16 @@ function App() {
                 ))}
               </div>
               <div style={{ fontSize: 12, color: "#c3dced", lineHeight: 1.6 }}>
-                <b style={{ color: "#7dffa0" }}>Stooges</b> almost never improve. At level 6 they finally gain a
+                <b style={{ color: utilityBlue }}>Stooges</b> almost never improve. At level 6 they finally gain a
                 Fused or Villain Ability — that's all they ever get.
                 <br />
                 <br />
-                <b style={{ color: "#7dffa0" }}>Warriors</b> add a Bonus Die exactly like Heroes, but never reach
+                <b style={{ color: utilityBlue }}>Warriors</b> add a Bonus Die exactly like Heroes, but never reach
                 the mythical d12 — it caps at d10. They gain a Super Move at level 2, and at level 4 gain a
                 <i> second</i> Fused or Villain Ability (a Unit can never have two Villain Archetypes).
                 <br />
                 <br />
-                <b style={{ color: "#7dffa0" }}>Bosses</b> start the fight already knowing a Super Move — chosen
+                <b style={{ color: utilityBlue }}>Bosses</b> start the fight already knowing a Super Move — chosen
                 from their Archetype, or a unique one if using a Boss (Villain) Archetype. Unlike Hero
                 Archetypes' two Super Moves, each Boss Archetype only has one available. Bosses start with a d4
                 Bonus Die and gain a <i>second</i> d4 at level 2 — from level 3 on, their lowest die steps up
@@ -3287,12 +3306,12 @@ function App() {
                 Styles.
                 <br />
                 <br />
-                <b style={{ color: "#7dffa0" }}>Improved Archetype</b> (Warriors and Bosses, level 8): one of
+                <b style={{ color: utilityBlue }}>Improved Archetype</b> (Warriors and Bosses, level 8): one of
                 their Fused Abilities becomes its Focused version.
               </div>
             </Panel>
 
-            <Panel title="Encounter Design" glow={amber} tag="UNITS · CINEMATIC WEIGHT" collapsible defaultOpen={false}>
+            <Panel title="Encounter Design" glow={utilityBlue} tag="UNITS · CINEMATIC WEIGHT" collapsible defaultOpen={false}>
               <div style={{ fontSize: 12.5, color: "#c3dced", lineHeight: 1.6, marginBottom: 10 }}>
                 Match Units to Heroes 1-for-1 for a fair fight. A Warrior is 1 Unit. A Stooge group is 1 Unit
                 (2 if it's a Super Stooge). A Boss is worth as many Units as it has Health Bars (2-5). Use the
@@ -3333,14 +3352,14 @@ function App() {
               ))}
             </Panel>
 
-            <Panel title="Between Fights" glow={cyan} tag="DEBUT · TROUBLE · CONTESTS · TEAMWORK" collapsible defaultOpen={false}>
+            <Panel title="Between Fights" glow={superTeal} tag="DEBUT · TROUBLE · CONTESTS · TEAMWORK" collapsible defaultOpen={false}>
               {BETWEEN_FIGHT_DATA.map((b) => (
                 <div
                   key={b.name}
                   style={{
                     background: "#0a121d",
                     border: "1px solid #223546",
-                    borderLeft: `3px solid ${cyan}`,
+                    borderLeft: `3px solid ${superTeal}`,
                     borderRadius: 3,
                     padding: "8px 12px",
                     marginBottom: 6,
@@ -3348,7 +3367,7 @@ function App() {
                     lineHeight: 1.55,
                   }}
                 >
-                  <b style={{ color: cyan }}>{b.name}</b>
+                  <b style={{ color: superTeal }}>{b.name}</b>
                   <div style={{ color: "#c3dced" }}>{b.text}</div>
                 </div>
               ))}
