@@ -16,7 +16,7 @@
   <script src="https://unpkg.com/react-dom@18/umd/react-dom.development.js"></script>
   <script src="https://unpkg.com/@babel/standalone/babel.min.js"></script>
   <script type="text/babel">
-    const { useState, useMemo, useEffect } = React;
+    const { useState, useMemo, useEffect, useReducer } = React;
 
 
 /* ---------------------------------------------------------------
@@ -665,6 +665,7 @@ const emptyChar = () => ({
   build: "Agile Build",
   appearance: "",
   backstory: "",
+  portrait: "",
   level: 1,
   xp: 0,
   superMoves: [],
@@ -696,6 +697,7 @@ const emptyEnemy = () => ({
   type: "Warrior", // Warrior | Stooge | Boss
   archetype: "Angel",
   archetypeIsBoss: false,
+  portrait: "",
   stances: Array.from({ length: 3 }, () => ({ form: "Blaster Form", style: "" })),
   build: "Bumbling Build",
   customSkill: "",
@@ -712,6 +714,82 @@ const emptyEnemy = () => ({
 
 function enemyStanceCount(type) {
   return type === "Boss" ? 3 : 1;
+}
+
+/* ---------- state reducers ----------
+   Centralizes every char/enemy state transition in one place, including the
+   "reset these other fields when this one changes" logic (Level, Enemy Type)
+   that used to be computed ad hoc inside individual onChange handlers. Also
+   fixes a latent staleness risk: the old inline stance/token updates read
+   the current array from the render closure (`enemy.stances`) rather than
+   from the freshest state, which could drop an update if two changes landed
+   before a re-render. Reducers always operate on the latest state. */
+function charReducer(state, action) {
+  switch (action.type) {
+    case "MERGE":
+      return { ...state, ...action.patch };
+    case "UPDATE_STANCE": {
+      const stances = state.stances.map((s, idx) => (idx === action.index ? { ...s, ...action.patch } : s));
+      return { ...state, stances };
+    }
+    case "UPDATE_FORM": {
+      const forms = state.forms.map((f, idx) => (idx === action.index ? action.formName : f));
+      return { ...state, forms };
+    }
+    case "UPDATE_SKILL": {
+      const skills = state.skills.map((s, idx) => (idx === action.index ? action.value : s));
+      return { ...state, skills };
+    }
+    case "BUMP_TOKEN": {
+      const cur = state.tokens[action.tokenType] || 0;
+      return { ...state, tokens: { ...state.tokens, [action.tokenType]: Math.max(0, cur + action.delta) } };
+    }
+    case "BUMP_HP":
+      return { ...state, hp: Math.max(0, Math.min(state.maxHp, state.hp + action.delta)) };
+    case "SET_LEVEL": {
+      const v = action.value;
+      const slots = superMoveSlotsForLevel(v);
+      const patch = { level: v, superMoves: state.superMoves.slice(0, slots) };
+      if (v < 4) patch.bonusArchetype = "";
+      if (v < 8) {
+        patch.level8Choice = "";
+        patch.improvedArchetype = "";
+        patch.secondBonusArchetype = "";
+      }
+      return { ...state, ...patch };
+    }
+    case "RESET":
+      return emptyChar();
+    case "LOAD":
+      return { ...emptyChar(), ...action.data };
+    default:
+      return state;
+  }
+}
+
+function enemyReducer(state, action) {
+  switch (action.type) {
+    case "MERGE":
+      return { ...state, ...action.patch };
+    case "SET_TYPE": {
+      const v = action.value;
+      return { ...state, type: v, healthBarsTotal: v === "Boss" ? 2 : 1, barsRemaining: v === "Boss" ? 2 : 1 };
+    }
+    case "UPDATE_STANCE": {
+      const stances = state.stances.map((s, idx) => (idx === action.index ? { ...s, ...action.patch } : s));
+      return { ...state, stances };
+    }
+    case "BUMP_TOKEN": {
+      const cur = state.tokens[action.tokenType] || 0;
+      return { ...state, tokens: { ...state.tokens, [action.tokenType]: Math.max(0, cur + action.delta) } };
+    }
+    case "RESET":
+      return emptyEnemy();
+    case "LOAD":
+      return { ...emptyEnemy(), ...action.data };
+    default:
+      return state;
+  }
 }
 
 /* ---------- palette ---------- */
@@ -964,6 +1042,135 @@ function TypeToggle({ options, value, onChange }) {
    or color-coding fix here fixes it everywhere at once, instead of needing
    the same edit repeated across StanceCard, the Build tab, the Export Sheet,
    and the GM Toolkit enemy builder. */
+/* ---------- portrait/reference-art upload ----------
+   Images are resized and re-compressed client-side before being stored,
+   since saves are serialized to JSON and kept in either Claude's artifact
+   storage (5MB/key) or, when running standalone, the browser's localStorage
+   (which has a much smaller total quota, often just a few MB across every
+   key on the whole page). A raw phone photo can be 5-10MB on its own, so
+   without this a single portrait could blow the entire storage budget.
+   Capping the longer edge at 480px and re-encoding as JPEG at 0.82 quality
+   keeps a typical portrait to roughly 20-60KB — small enough that several
+   saved heroes/enemies with art each still comfortably fit either backend. */
+const PORTRAIT_MAX_DIM = 480;
+const PORTRAIT_JPEG_QUALITY = 0.82;
+
+function processImageFile(file) {
+  return new Promise((resolve, reject) => {
+    if (!file || !file.type || !file.type.startsWith("image/")) {
+      reject(new Error("That doesn't look like an image file."));
+      return;
+    }
+    const reader = new FileReader();
+    reader.onerror = () => reject(new Error("Couldn't read that file."));
+    reader.onload = () => {
+      const img = new Image();
+      img.onerror = () => reject(new Error("Couldn't decode that image."));
+      img.onload = () => {
+        try {
+          const scale = Math.min(1, PORTRAIT_MAX_DIM / Math.max(img.width, img.height));
+          const w = Math.max(1, Math.round(img.width * scale));
+          const h = Math.max(1, Math.round(img.height * scale));
+          const canvas = document.createElement("canvas");
+          canvas.width = w;
+          canvas.height = h;
+          const ctx = canvas.getContext("2d");
+          ctx.drawImage(img, 0, 0, w, h);
+          resolve(canvas.toDataURL("image/jpeg", PORTRAIT_JPEG_QUALITY));
+        } catch (e) {
+          reject(e);
+        }
+      };
+      img.src = reader.result;
+    };
+    reader.readAsDataURL(file);
+  });
+}
+
+function PortraitUpload({ value, onChange, accentColor, label }) {
+  const [busy, setBusy] = useState(false);
+  const [error, setError] = useState("");
+  const inputRef = React.useRef(null);
+
+  async function handleFile(e) {
+    const file = e.target.files && e.target.files[0];
+    e.target.value = ""; // allow re-selecting the same file later
+    if (!file) return;
+    setBusy(true);
+    setError("");
+    try {
+      const dataUrl = await processImageFile(file);
+      onChange(dataUrl);
+    } catch (err) {
+      setError(err.message || "Couldn't process that image.");
+    }
+    setBusy(false);
+  }
+
+  return (
+    <Field label={label || "Reference Art"}>
+      <div style={{ display: "flex", alignItems: "center", gap: 10 }}>
+        {value ? (
+          <img
+            src={value}
+            alt="Reference art"
+            style={{
+              width: 56,
+              height: 56,
+              objectFit: "cover",
+              borderRadius: 3,
+              border: `2px solid ${accentColor}`,
+              flexShrink: 0,
+            }}
+          />
+        ) : (
+          <div
+            style={{
+              width: 56,
+              height: 56,
+              borderRadius: 3,
+              border: `1px dashed #3a4c5c`,
+              flexShrink: 0,
+              display: "flex",
+              alignItems: "center",
+              justifyContent: "center",
+              color: dim,
+              fontSize: 9,
+              textAlign: "center",
+              lineHeight: 1.2,
+            }}
+          >
+            no art
+          </div>
+        )}
+        <div style={{ display: "flex", flexDirection: "column", gap: 6, flex: 1 }}>
+          <div style={{ display: "flex", gap: 6 }}>
+            <button
+              type="button"
+              disabled={busy}
+              onClick={() => inputRef.current && inputRef.current.click()}
+              style={{ ...linkBtnStyle(accentColor), opacity: busy ? 0.5 : 1, flex: 1 }}
+            >
+              {busy ? "PROCESSING..." : value ? "REPLACE" : "UPLOAD IMAGE"}
+            </button>
+            {value && (
+              <button type="button" onClick={() => onChange("")} style={linkBtnStyle(danger)}>
+                REMOVE
+              </button>
+            )}
+          </div>
+          <input ref={inputRef} type="file" accept="image/*" onChange={handleFile} style={{ display: "none" }} />
+          {error ? (
+            <div style={{ fontSize: 10.5, color: danger }}>{error}</div>
+          ) : (
+            <div style={{ fontSize: 10.5, color: dim }}>Resized &amp; compressed automatically before saving.</div>
+          )}
+        </div>
+      </div>
+    </Field>
+  );
+}
+
 function Toast({ message }) {
   if (!message) return null;
   const isError = /FAILED|ERROR|NOT FOUND/.test(message);
@@ -1215,7 +1422,7 @@ class ErrorBoundary extends React.Component {
 }
 
 function App() {
-  const [char, setChar] = useState(emptyChar());
+  const [char, dispatchChar] = useReducer(charReducer, undefined, emptyChar);
   const [tab, setTab] = useState("build");
   const [uiRestored, setUiRestored] = useState(false);
   const [gmHintDismissed, setGmHintDismissed] = useState(false);
@@ -1226,7 +1433,7 @@ function App() {
   const [linkStatus, setLinkStatus] = useState("");
   const [linkBusy, setLinkBusy] = useState(false);
 
-  const [enemy, setEnemy] = useState(emptyEnemy());
+  const [enemy, dispatchEnemy] = useReducer(enemyReducer, undefined, emptyEnemy);
   const [enemyRoster, setEnemyRoster] = useState([]);
   const [selectedEnemySave, setSelectedEnemySave] = useState("");
   const [confirmDeleteEnemy, setConfirmDeleteEnemy] = useState(false);
@@ -1353,7 +1560,7 @@ function App() {
       const result = await appStorage.get(key);
       if (result && result.value) {
         const loaded = JSON.parse(result.value);
-        setChar({ ...emptyChar(), ...loaded });
+        dispatchChar({ type: "LOAD", data: loaded });
         const versionNote =
           loaded.schemaVersion && loaded.schemaVersion !== CHAR_SCHEMA_VERSION
             ? " (older format — double-check fields)"
@@ -1383,13 +1590,13 @@ function App() {
   }
 
   function newHero() {
-    setChar(emptyChar());
+    dispatchChar({ type: "RESET" });
     setSelectedSave("");
     setLinkStatus("NEW RECORD STARTED");
   }
 
   function updateEnemy(patch) {
-    setEnemy((e) => ({ ...e, ...patch }));
+    dispatchEnemy({ type: "MERGE", patch });
   }
 
   async function refreshEnemyRoster() {
@@ -1432,7 +1639,7 @@ function App() {
       const result = await appStorage.get(key);
       if (result && result.value) {
         const loaded = JSON.parse(result.value);
-        setEnemy({ ...emptyEnemy(), ...loaded });
+        dispatchEnemy({ type: "LOAD", data: loaded });
         const versionNote =
           loaded.schemaVersion && loaded.schemaVersion !== ENEMY_SCHEMA_VERSION
             ? " (older format — double-check fields)"
@@ -1462,7 +1669,7 @@ function App() {
   }
 
   function newEnemy() {
-    setEnemy(emptyEnemy());
+    dispatchEnemy({ type: "RESET" });
     setSelectedEnemySave("");
     setEnemyLinkStatus("NEW RECORD STARTED");
   }
@@ -1498,39 +1705,27 @@ function App() {
   );
 
   function update(patch) {
-    setChar((c) => ({ ...c, ...patch }));
+    dispatchChar({ type: "MERGE", patch });
   }
 
   function updateStance(i, patch) {
-    setChar((c) => {
-      const stances = c.stances.map((s, idx) => (idx === i ? { ...s, ...patch } : s));
-      return { ...c, stances };
-    });
+    dispatchChar({ type: "UPDATE_STANCE", index: i, patch });
   }
 
   function updateForm(i, formName) {
-    setChar((c) => {
-      const forms = c.forms.map((f, idx) => (idx === i ? formName : f));
-      return { ...c, forms };
-    });
+    dispatchChar({ type: "UPDATE_FORM", index: i, formName });
   }
 
   function updateSkill(i, val) {
-    setChar((c) => {
-      const skills = c.skills.map((s, idx) => (idx === i ? val : s));
-      return { ...c, skills };
-    });
+    dispatchChar({ type: "UPDATE_SKILL", index: i, value: val });
   }
 
   function bumpToken(type, delta) {
-    setChar((c) => ({
-      ...c,
-      tokens: { ...c.tokens, [type]: Math.max(0, (c.tokens[type] || 0) + delta) },
-    }));
+    dispatchChar({ type: "BUMP_TOKEN", tokenType: type, delta });
   }
 
   function bumpHp(delta) {
-    setChar((c) => ({ ...c, hp: Math.max(0, Math.min(c.maxHp, c.hp + delta)) }));
+    dispatchChar({ type: "BUMP_HP", delta });
   }
 
   function labelFromKey(key) {
@@ -1877,6 +2072,7 @@ function App() {
             </Panel>
 
             <Panel title="Character Details" tag="DOSSIER — DESCRIPTIVE RECORD" glow={magenta}>
+              <PortraitUpload value={char.portrait} onChange={(v) => update({ portrait: v })} accentColor={magenta} />
               <Field label="Build">
                 <select style={selectStyle} value={char.build} onChange={(e) => update({ build: e.target.value })}>
                   {BUILD_DATA.map((b) => (
@@ -1953,17 +2149,7 @@ function App() {
                     value={char.level}
                     onChange={(e) => {
                       const v = Math.max(1, Math.min(10, parseInt(e.target.value) || 1));
-                      const slots = superMoveSlotsForLevel(v);
-                      const patch = { level: v, superMoves: char.superMoves.slice(0, slots) };
-                      if (v < 4) {
-                        patch.bonusArchetype = "";
-                      }
-                      if (v < 8) {
-                        patch.level8Choice = "";
-                        patch.improvedArchetype = "";
-                        patch.secondBonusArchetype = "";
-                      }
-                      update(patch);
+                      dispatchChar({ type: "SET_LEVEL", value: v });
                     }}
                   />
                 </Field>
@@ -2420,12 +2606,23 @@ function App() {
         {tab === "combat" && (
           <>
             <Panel title="Hero Readout" tag="LIVE FIELD UPLINK — VARA SPIRAL RELAY">
-              <div style={{ fontFamily: headFont, fontSize: 22, letterSpacing: 1.5, color: textMain, marginBottom: 4 }}>
-                {char.name || "UNNAMED HERO"}
-              </div>
-              <div style={{ fontFamily: monoFont, fontSize: 12, color: dim }}>
-                {char.heroType.toUpperCase()} · {archetypesAvailable.join(" / ").toUpperCase()}
-                {char.player ? ` · PLAYER: ${char.player}` : ""}
+              <div style={{ display: "flex", alignItems: "center", gap: 12 }}>
+                {char.portrait && (
+                  <img
+                    src={char.portrait}
+                    alt={char.name || "Hero portrait"}
+                    style={{ width: 56, height: 56, objectFit: "cover", borderRadius: 3, border: `2px solid ${cyan}`, flexShrink: 0 }}
+                  />
+                )}
+                <div>
+                  <div style={{ fontFamily: headFont, fontSize: 22, letterSpacing: 1.5, color: textMain, marginBottom: 4 }}>
+                    {char.name || "UNNAMED HERO"}
+                  </div>
+                  <div style={{ fontFamily: monoFont, fontSize: 12, color: dim }}>
+                    {char.heroType.toUpperCase()} · {archetypesAvailable.join(" / ").toUpperCase()}
+                    {char.player ? ` · PLAYER: ${char.player}` : ""}
+                  </div>
+                </div>
               </div>
             </Panel>
 
@@ -2970,6 +3167,13 @@ function App() {
 
             <div id="export-sheet">
               <Panel title="Hero Sheet" glow={cyan} tag="FULL RECORD — ALL STANCES &amp; TOKENS">
+                {char.portrait && (
+                  <img
+                    src={char.portrait}
+                    alt={char.name || "Hero portrait"}
+                    style={{ width: "100%", maxHeight: 220, objectFit: "cover", borderRadius: 4, border: `2px solid ${cyan}`, marginBottom: 12 }}
+                  />
+                )}
                 <div style={{ fontFamily: headFont, fontSize: 22, letterSpacing: 1.5, color: textMain, marginBottom: 2 }}>
                   {char.name || "UNNAMED HERO"}
                 </div>
@@ -3167,6 +3371,11 @@ function App() {
             </Panel>
 
             <Panel title="Quick Enemy Builder" tag="WARRIOR · STOOGE · BOSS" glow={magenta}>
+              <PortraitUpload
+                value={enemy.portrait}
+                onChange={(v) => updateEnemy({ portrait: v })}
+                accentColor={magenta}
+              />
               <div style={{ display: "grid", gridTemplateColumns: "2fr 1fr", gap: 12 }}>
                 <Field label="Name">
                   <input
@@ -3192,13 +3401,7 @@ function App() {
                 <TypeToggle
                   options={["Warrior", "Stooge", "Boss"]}
                   value={enemy.type}
-                  onChange={(v) =>
-                    updateEnemy({
-                      type: v,
-                      healthBarsTotal: v === "Boss" ? 2 : 1,
-                      barsRemaining: v === "Boss" ? 2 : 1,
-                    })
-                  }
+                  onChange={(v) => dispatchEnemy({ type: "SET_TYPE", value: v })}
                 />
                 <div style={{ fontSize: 11, color: dim, marginTop: 6, lineHeight: 1.5 }}>
                   {ENEMY_TYPE_INFO[enemy.type].summary}
@@ -3390,12 +3593,7 @@ function App() {
                         <select
                           style={selectStyle}
                           value={stance.form}
-                          onChange={(e) => {
-                            const stances = enemy.stances.map((s, idx) =>
-                              idx === i ? { ...s, form: e.target.value } : s
-                            );
-                            updateEnemy({ stances });
-                          }}
+                          onChange={(e) => dispatchEnemy({ type: "UPDATE_STANCE", index: i, patch: { form: e.target.value } })}
                         >
                           {GAME_DATA.forms.map((f) => (
                             <option key={f.name} value={f.name}>
@@ -3408,12 +3606,7 @@ function App() {
                         <select
                           style={selectStyle}
                           value={stance.style}
-                          onChange={(e) => {
-                            const stances = enemy.stances.map((s, idx) =>
-                              idx === i ? { ...s, style: e.target.value } : s
-                            );
-                            updateEnemy({ stances });
-                          }}
+                          onChange={(e) => dispatchEnemy({ type: "UPDATE_STANCE", index: i, patch: { style: e.target.value } })}
                         >
                           <option value="">— choose —</option>
                           {ALL_STYLES_FLAT.map((s) => (
@@ -3461,6 +3654,23 @@ function App() {
             </Panel>
 
             <Panel title="Unit Tracker" tag="LIVE COMBAT READOUT" glow={enemyHpColor}>
+              <div style={{ display: "flex", alignItems: "center", gap: 12, marginBottom: 10 }}>
+                {enemy.portrait && (
+                  <img
+                    src={enemy.portrait}
+                    alt={enemy.name || "Enemy portrait"}
+                    style={{ width: 52, height: 52, objectFit: "cover", borderRadius: 3, border: `2px solid ${enemyHpColor}`, flexShrink: 0 }}
+                  />
+                )}
+                <div>
+                  <div style={{ fontFamily: headFont, fontSize: 18, letterSpacing: 1, color: textMain }}>
+                    {enemy.name || `UNNAMED ${enemy.type.toUpperCase()}`}
+                  </div>
+                  <div style={{ fontFamily: monoFont, fontSize: 11, color: dim }}>
+                    {enemy.type.toUpperCase()} · {enemy.archetype.toUpperCase()}
+                  </div>
+                </div>
+              </div>
               {enemy.superMove && !enemy.archetypeIsBoss && GAME_DATA.archetypes[enemy.archetype]?.supers && (
                 <div
                   style={{
@@ -3563,9 +3773,7 @@ function App() {
                     <div style={{ display: "flex", alignItems: "center", gap: 8 }}>
                       <button
                         className="tok-btn"
-                        onClick={() =>
-                          updateEnemy({ tokens: { ...enemy.tokens, [t.key]: Math.max(0, (enemy.tokens[t.key] || 0) - 1) } })
-                        }
+                        onClick={() => dispatchEnemy({ type: "BUMP_TOKEN", tokenType: t.key, delta: -1 })}
                         style={tokBtnStyle}
                       >
                         −
@@ -3575,7 +3783,7 @@ function App() {
                       </span>
                       <button
                         className="tok-btn"
-                        onClick={() => updateEnemy({ tokens: { ...enemy.tokens, [t.key]: (enemy.tokens[t.key] || 0) + 1 } })}
+                        onClick={() => dispatchEnemy({ type: "BUMP_TOKEN", tokenType: t.key, delta: 1 })}
                         style={tokBtnStyle}
                       >
                         +
